@@ -1,0 +1,11 @@
+[
+  {
+    "id": 0,
+    "uid": "sample-uid",
+    "location": {
+      "latitude": 36.62896,
+      "longitude": 127.455913
+    },
+    "time": "2024-04-17 10:00:00"
+  }
+]
