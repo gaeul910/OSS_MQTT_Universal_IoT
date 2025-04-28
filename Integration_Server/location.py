@@ -2,6 +2,8 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
+# Please Note that responses could change when DB is linked.
+
 @app.route("/location/logs", methods=['GET', 'POST'])
 
 def logs():
@@ -17,18 +19,33 @@ def logs():
         jsonoutput.write(request.data)
         return
 
-@app.route("/location/fav", methods=['GET', 'POST'])
+@app.route("/location/fav/point", methods=['GET', 'POST'])
 
-def fav():
+def point():
     if(request.method == 'GET'):
         uid = request.args.get("uid", "str")
         if(uid == "sample-uid"):
-            return render_template("fav.json")
+            return render_template("favpoint.json")
         return "Request by UID is still under development"
     
     elif(request.method == 'POST'):
         uid = request.args.get("uid", "str")
         jsonoutput = open("templates/favlocationforupload.json", "w")
+        jsonoutput.write(request.data)
+        return
+    
+@app.route("/location/fav/route", methods=['GET', 'POST'])
+
+def route():
+    if(request.method == 'GET'):
+        uid = request.args.get("uid", "str")
+        if(uid == "sample-uid"):
+            return render_template("favroute.json")
+        return "Request by UID is still under development"
+    
+    elif(request.method == 'POST'):
+        uid = request.args.get("uid", "str")
+        jsonoutput = open("templates/routelocationforupload.json", "w")
         jsonoutput.write(request.data)
         return
 
