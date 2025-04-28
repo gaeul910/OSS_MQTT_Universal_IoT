@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-@app.route("/api/location/getdata")
+@app.route("/location/getdata")
 
 def getdata():
     uid = request.args.get("uid", "str")
@@ -10,7 +10,7 @@ def getdata():
         return render_template("location.json")
     return "Request by UID is still under development"
 
-@app.route("/api/location/postdata", methods=['post'])
+@app.route("/location/postdata", methods=['post'])
 
 def postdata():
     uid = request.args("uid", "str")
