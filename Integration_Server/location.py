@@ -17,6 +17,20 @@ def logs():
         jsonoutput.write(request.data)
         return
 
+@app.route("/location/fav", methods=['GET', 'POST'])
+
+def fav():
+    if(request.method == 'GET'):
+        uid = request.args.get("uid", "str")
+        if(uid == "sample-uid"):
+            return render_template("fav.json")
+        return "Request by UID is still under development"
+    
+    elif(request.method == 'POST'):
+        uid = request.args.get("uid", "str")
+        jsonoutput = open("templates/favlocationforupload.json", "w")
+        jsonoutput.write(request.data)
+        return
 
 if __name__ == "__main__":
     app.run(debug=True)
