@@ -48,6 +48,22 @@ def route():
         jsonoutput = open("templates/routelocationforupload.json", "w")
         jsonoutput.write(request.data)
         return
+    
+@app.route("/event/eventlogs", methods=['GET', 'POST'])
+
+def eventlogs():
+    if(request.method == 'GET'):
+        uid = request.args.get("uid", "str")
+        locationid = request.args.get("locationid", "str")
+        if(uid == "sample-uid" and locationid == '1'):
+            return render_template("event.json")
+        return "Request by UID and Location ID is still under development"
+    
+    elif(request.method == 'POST'):
+        uid = request.args.get("uid", "str")
+        jsonoutput = open("templates/eventforupload.json", "w")
+        jsonoutput.write(request.data)
+        return
 
 if __name__ == "__main__":
     app.run(debug=True)
