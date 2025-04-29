@@ -22,9 +22,19 @@ column=float(data[1])
 status=0
 len=7
 
+arr=[
+   [120,40],
+   [120,40],
+   [120,40],
+   [120,40],
+   [120,40],
+   [120,40],
+   [120,40]
+]
+
 for i in range(0,len):
-   if 120-10 < row < 120+10:
-      if 40-10 < column < 40+10:
+   if arr[i][0]-10 < row < arr[i][0]+10:
+      if arr[i][1]-10 < column < arr[i][1]+10:
          status=1
          break
          
