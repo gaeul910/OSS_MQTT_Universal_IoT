@@ -1,13 +1,31 @@
 import json
 
 with open("./test.json","r") as f:
-    dir = json.load(f)                # .json È®ÀåÀÚ ÆÄÀÏ¿¡¼­ µñ¼Å³Ê¸® ÇüÅÂ·Î Á¤º¸ ÀúÀå
-    if isinstance(dir,list):          # ¸¸¾à ¹Ş¾Æ¿À´Â°Ô ¸®½ºÆ®ÀÏ °æ¿ì µñ¼Å³Ê¸®·Î ¹Ù²Ş
+    dir = json.load(f)                
+# .json ï¿½ì†—ï¿½ì˜£ï¿½ì˜„ ï¿½ë™†ï¿½ì”ªï¿½ë¿‰ï¿½ê½Œ ï¿½ëµ“ï¿½ë€›ï¿½ê¼«ç”±ï¿½ ï¿½ì‚ï¿½ê¹­æ¿¡ï¿½ ï¿½ì ™è¹‚ï¿½ ï¿½ï¿½ï¿½ï¿½ì˜£
+    if isinstance(dir,list):          
+# ï§ëš¯ë¹Ÿ è«›ì†ë¸˜ï¿½ì‚¤ï¿½ë’—å¯ƒï¿½ ç”±ÑŠë’ªï¿½ë“ƒï¿½ì”ª å¯ƒìŒìŠ¦ ï¿½ëµ“ï¿½ë€›ï¿½ê¼«ç”±Ñ‰ì¤ˆ è«›ë¶½í“
       dir=dict(dir[0])
-    print(dir)                        # Àß ÀúÀå µÇ¾ú´ÂÁö È®ÀÎ¿ë
+    print(dir)                      
+# ï¿½ì˜’ ï¿½ï¿½ï¿½ï¿½ì˜£ ï¿½ë¦ºï¿½ë¿€ï¿½ë’—ï§ï¿½ ï¿½ì†—ï¿½ì”¤ï¿½ìŠœ
 
-
-
-
-with open("./test1.json","w") as t:   #µñ¼Å³Ê¸®¸¦ json ÆÄÀÏÇüÅÂ·Î ÀúÀå
+with open("./test1.json","w") as t:   
+#ï¿½ëµ“ï¿½ë€›ï¿½ê¼«ç”±Ñ‰ï¿½ï¿½ json ï¿½ë™†ï¿½ì”ªï¿½ì‚ï¿½ê¹­æ¿¡ï¿½ ï¿½ï¿½ï¿½ï¿½ì˜£
     json.dump(dir,t, indent=2)
+
+pointer=dir["coordness"]
+point=pointer.replace("POINT(","").replace(")","")
+data=point.split()
+
+row=float(data[0])
+column=float(data[1])
+status=0
+len=7
+
+for i in range(0,len):
+   if 120-10 < row < 120+10:
+      if 40-10 < column < 40+10:
+         status=1
+         break
+         
+print(status)
