@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'config.dart';
 class LobbyScreen extends StatefulWidget {
   const LobbyScreen({Key? key}) : super(key: key);
 
@@ -57,8 +57,11 @@ class _LobbyScreenState extends State<LobbyScreen> {
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                Navigator.pop(context); // Drawer 닫기
-                // 설정 화면 이동 추가(예정)
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
               },
             ),
             ListTile(
