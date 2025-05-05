@@ -1,21 +1,42 @@
 import 'package:flutter/material.dart';
 import 'login.dart'; // 로그인 화면 import
 
-/// 설정 화면 전체를 보여주는 위젯 (기존에 만드신 화면이 있다면 그걸 사용하세요)
-class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({super.key});
 
+import 'package:flutter/material.dart';
+import 'login.dart'; // 로그인 화면 import
+
+
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
+    final bool isDarkMode = themeNotifier.themeMode == ThemeMode.dark;
+
     return Scaffold(
       appBar: AppBar(title: const Text('설정')),
       body: ListView(
         children: [
+          // 1. 다크모드 토글
+          SwitchListTile(
+            secondary: const Icon(Icons.dark_mode),
+            title: const Text('다크모드'),
+            value: isDarkMode,
+            onChanged: (value) {
+              setState(() {
+                themeNotifier.toggleTheme(value);
+              });
+            },
+          ),
+          // 2. 로그아웃 항목
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('로그아웃'),
             onTap: () async {
-              // 로그아웃 확인 다이얼로그 띄우기
               final bool? shouldLogout = await showDialog<bool>(
                 context: context,
                 builder: (context) {
@@ -24,20 +45,18 @@ class SettingsScreen extends StatelessWidget {
                     content: const Text('정말 로그아웃하시겠습니까?'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false), // 취소
+                        onPressed: () => Navigator.of(context).pop(false),
                         child: const Text('취소'),
                       ),
                       ElevatedButton(
-                        onPressed: () => Navigator.of(context).pop(true), // 확인
+                        onPressed: () => Navigator.of(context).pop(true),
                         child: const Text('로그아웃'),
                       ),
                     ],
                   );
                 },
               );
-
               if (shouldLogout == true) {
-                // 확인 시 로그인 화면으로 이동 (모든 화면 제거)
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
@@ -51,3 +70,13 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
+class ThemeNotifier extends ChangeNotifier {
+  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode get themeMode => _themeMode;
+
+  void toggleTheme(bool isDark) {
+    _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    notifyListeners();
+  }
+}
+final ThemeNotifier themeNotifier = ThemeNotifier();

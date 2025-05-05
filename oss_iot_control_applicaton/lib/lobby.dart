@@ -57,8 +57,8 @@ class _LobbyScreenState extends State<LobbyScreen> {
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
               onTap: () {
-                Navigator.pop(context); // Drawer 닫기
-                Navigator.push( // 전체 화면으로 설정 페이지 열기
+                Navigator.pop(context);
+                Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const SettingsScreen()),
                 );
