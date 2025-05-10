@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
-
+import 'lobby.dart';
 // 로그인 페이지 위젯 (StatefulWidget으로 입력값 관리)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   // 문자열 입력을 위한 컨트롤러
   final TextEditingController _textController = TextEditingController();
 
-  // 사용자가 입력한 6자리 코드 저장 변수
+  // 사용자가 입력한 인증코드 저장 변수
   String _enteredCode = '';
 
   // 로그인 버튼 클릭 시 실행되는 함수
@@ -33,8 +33,9 @@ class _LoginPageState extends State<LoginPage> {
 
     // 인증코드가 일치하는지 체크
     if (code == correctCode) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('로그인 성공!')),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LobbyScreen()),
       );
       // 로그인 성공 시 추가 작업 가능
     } else {
@@ -63,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 24), // 위젯 사이 간격
 
-            // 6자리 숫자 코드 입력 필드 (Pinput)
+            // 인증코드 입력 필드 (Pinput)
             Pinput(
               length: 6, // 6자리로 고정
               keyboardType: TextInputType.number, // 숫자 키패드 표시
