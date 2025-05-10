@@ -111,19 +111,5 @@ def postnoti():
         conn.commit()
         return "Success"
 
-@app.route("/notification/sync", methods=['GET'])
-
-def sync():
-    uid = request.args.get("uid", "str")
-    uid = int(uid)
-    try:
-        cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
-
-        ret = cursor.fetchall()
-    except:
-        return f"Error: {ret}"
-    print(ret)
-    return ret
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
