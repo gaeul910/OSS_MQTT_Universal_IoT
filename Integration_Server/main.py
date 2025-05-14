@@ -1,7 +1,20 @@
 from flask import Flask, render_template, request
+import pymysql
+import sys
+import time
 
 app = Flask(__name__)
+MYSQL_HOST = "db"
+MYSQL_PORT = 3306
+MYSQL_USERNAME = "root"
+MYSQL_PASSWORD = "defaultpassword1"
+MYSQL_DB = "iot-db"
+try:
+    conn = pymysql.connect(host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USERNAME, passwd=MYSQL_PASSWORD, database=MYSQL_DB, autocommit=True)
+except:
+    sys.exit(3)
 
+cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
 @app.route("/location/logs", methods=['GET', 'POST'])
@@ -64,6 +77,60 @@ def eventlogs():
         jsonoutput = open("templates/eventforupload.json", "w")
         jsonoutput.write(request.data)
         return
+    
+@app.route("/notification/getnoti", methods=['GET'])
+
+def getnoti():
+    notification_id = request.headers["id"]
+    notification_id = int(notification_id)
+    try:
+        cursor.execute("SELECT * FROM usernotifications WHERE id = %s", (notification_id,))
+        ret = cursor.fetchall()
+        
+        if not ret:
+            return "No notification found for {}".format(notification_id)
+    except:
+        return f"Error: {ret}"
+    return ret
+    
+@app.route("/notification/postnoti", methods=['POST'])
+
+def postnoti():
+        uid = request.headers["uid"]
+        dict_req = request.get_json()
+        content = dict_req["content"]
+        issue = dict_req["time"]
+        about = dict_req["about"]
+        uid = int(uid)
+        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
+        cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
+        getdict = cursor.fetchone()
+        notification_id = getdict['highest_id']
+        if not notification_id:
+            notification_id = 0
+        notification_id += 1
+
+        try:
+            cursor.execute(query, (notification_id, uid, content, issue, 0, about))
+        except:
+            return "Error"
+        conn.commit()
+        return "Success"
+
+@app.route("/notification/sync", methods=['GET'])
+
+def sync():
+    uid = request.headers["uid"]
+    uid = int(uid)
+    try:
+        cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
+
+        ret = cursor.fetchall()
+        if not ret:
+            return "No data to sync"
+    except:
+        return f"Error: {ret}"
+    return ret
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", debug=True)
