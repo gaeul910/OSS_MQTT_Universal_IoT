@@ -116,15 +116,16 @@ def postnoti():
 @app.route("/notification/sync", methods=['GET'])
 
 def sync():
-    uid = request.args.get("uid", "str")
+    uid = request.headers["uid"]
     uid = int(uid)
     try:
         cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
 
         ret = cursor.fetchall()
+        if not ret:
+            return "No data to sync"
     except:
         return f"Error: {ret}"
-    print(ret)
     return ret
 
 if __name__ == "__main__":
