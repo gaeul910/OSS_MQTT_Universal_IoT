@@ -4,7 +4,6 @@ import sys
 import time
 
 app = Flask(__name__)
-
 MYSQL_HOST = "db"
 MYSQL_PORT = 3306
 MYSQL_USERNAME = "root"
@@ -82,10 +81,14 @@ def eventlogs():
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
-    notification_id = request.args.get("id", "str")
+    notification_id = request.headers["id"]
+    notification_id = int(notification_id)
     try:
         cursor.execute("SELECT * FROM usernotifications WHERE id = %s", (notification_id,))
         ret = cursor.fetchall()
+        
+        if not ret:
+            return "No notification found for {}".format(notification_id)
     except:
         return f"Error: {ret}"
     return ret
@@ -93,10 +96,13 @@ def getnoti():
 @app.route("/notification/postnoti", methods=['POST'])
 
 def postnoti():
-        uid = request.args.get("uid", "str")
+        uid = request.headers["uid"]
+        dict_req = request.get_json()
+        content = dict_req["content"]
+        issue = dict_req["time"]
+        about = dict_req["about"]
         uid = int(uid)
-        content = request.data
-        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s)"
+        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
         cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
         getdict = cursor.fetchone()
         notification_id = getdict['highest_id']
@@ -105,7 +111,7 @@ def postnoti():
         notification_id += 1
 
         try:
-            cursor.execute(query, (notification_id, uid, content, "2025-01-01 00:00:00", 0,))
+            cursor.execute(query, (notification_id, uid, content, issue, 0, about))
         except:
             return "Error"
         conn.commit()
@@ -114,15 +120,16 @@ def postnoti():
 @app.route("/notification/sync", methods=['GET'])
 
 def sync():
-    uid = request.args.get("uid", "str")
+    uid = request.headers["uid"]
     uid = int(uid)
     try:
         cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
 
         ret = cursor.fetchall()
+        if not ret:
+            return "No data to sync"
     except:
         return f"Error: {ret}"
-    print(ret)
     return ret
 
 if __name__ == "__main__":
