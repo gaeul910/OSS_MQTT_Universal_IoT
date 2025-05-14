@@ -1,4 +1,5 @@
 import machine_swich as MS
+import point_range as PR
 import json
 
 #디폴트 제어는 집에 엄청 가까워졌을때만을 목적으로 하기때문에 레벨은 0 or 1 밖에 없다.
@@ -35,18 +36,19 @@ class control:
     def home_in(self):
         
         data=self.home_point.split()
-        home_row=float(data[0])
-        home_column=float(data[1])
-        print(home_row,home_column)
+        home_point=[]
+        home_point.append(float(data[0]))
+        home_point.append(float(data[1]))
+        print(home_point)
          # 집의 좌표를 실수형으로 저장
 
 
-        data=self.now_point.split()  
-        now_row=float(data[0])
-        now_column=float(data[1])
+        data=self.now_point.split()
+        now_point=[]
+        now_point.append(float(data[0])) 
+        now_point.append(float(data[1])) 
 
-        if home_row-10 < now_row <home_row+10:
-            if home_column-10 < now_column < home_column+10:
+        if PR.range(home_point,now_point)<2:
                  self.level=1
         #현재 위치를 근거로 집 위치와 비교해서 곧 도착하는지 확인하기
         MS.swich(self.level)
