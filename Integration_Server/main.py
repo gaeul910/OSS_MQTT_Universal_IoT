@@ -81,10 +81,14 @@ def eventlogs():
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
-    notification_id = request.args.get("id", "str")
+    notification_id = request.headers["id"]
+    notification_id = int(notification_id)
     try:
         cursor.execute("SELECT * FROM usernotifications WHERE id = %s", (notification_id,))
         ret = cursor.fetchall()
+        
+        if not ret:
+            return "No notification found for {}".format(notification_id)
     except:
         return f"Error: {ret}"
     return ret
