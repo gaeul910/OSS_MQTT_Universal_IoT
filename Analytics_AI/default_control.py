@@ -56,22 +56,20 @@ class control:
     
     def home_out(self):
         data=self.home_point.split()
-        home_row=float(data[0])
-        home_column=float(data[1])
-        print(home_row,home_column)
+        home_point=[]
+        home_point.append(float(data[0]))
+        home_point.append(float(data[1]))
+        print(home_point)
          # 집의 좌표를 실수형으로 저장
 
-        data=self.now_point.split()  
-        now_row=float(data[0])
-        now_column=float(data[1])
-
-        if now_row < home_row-10 or now_row > home_row+10:
-            level=0
-        
-        if now_column < home_column-10 or now_column > home_column+10:
-            level=0
+        data=self.now_point.split()
+        now_point=[]
+        now_point.append(float(data[0])) 
+        now_point.append(float(data[1])) 
+        if PR.range(home_point,now_point)>2:
+            self.level=0
         #현재 위치를 근거로 집 위치와 비교해서 나갔는지 확인하기
-        MS.swich(level)
+        MS.swich(self.level)
         print("집을 나갈때 디폴트")
     
     def control_panel(self,b):
@@ -82,7 +80,7 @@ class control:
             self.home_in()
 
 ct=control()
-ct.control_panel(0)
+ct.control_panel(1)
 
 
 #좌표가 제대로 나오는지 확인용 나중에 지워야함
