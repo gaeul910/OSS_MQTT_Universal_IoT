@@ -4,7 +4,6 @@ import sys
 import time
 
 app = Flask(__name__)
-
 MYSQL_HOST = "db"
 MYSQL_PORT = 3306
 MYSQL_USERNAME = "root"
@@ -93,10 +92,13 @@ def getnoti():
 @app.route("/notification/postnoti", methods=['POST'])
 
 def postnoti():
-        uid = request.args.get("uid", "str")
+        uid = request.headers["uid"]
+        dict_req = request.get_json()
+        content = dict_req["content"]
+        issue = dict_req["time"]
+        about = dict_req["about"]
         uid = int(uid)
-        content = request.data
-        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s)"
+        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
         cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
         getdict = cursor.fetchone()
         notification_id = getdict['highest_id']
@@ -105,7 +107,7 @@ def postnoti():
         notification_id += 1
 
         try:
-            cursor.execute(query, (notification_id, uid, content, "2025-01-01 00:00:00", 0,))
+            cursor.execute(query, (notification_id, uid, content, issue, 0, about))
         except:
             return "Error"
         conn.commit()
