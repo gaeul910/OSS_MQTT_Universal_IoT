@@ -39,7 +39,8 @@ CREATE TABLE `usernotifications` (
 	`uid`	INT(11)	NOT NULL,
 	`content`	TEXT	NULL,
 	`time`	DATETIME	NULL,
-	`stat`	BOOLEAN	NULL
+	`stat`	BOOLEAN	NULL,
+	`about`	INT(11)	NULL
 );
 
 CREATE TABLE `clients` (
