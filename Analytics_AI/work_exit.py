@@ -29,30 +29,14 @@ for i in range(0,num):
 print(point)
 #포인트에 뭐가 들어갔는지 확인하는 용도 나중에 지워야함
 
-request=open("test.json","r")
-    #요청받는 값은 json형태이다
-with request as f:
-        p=json.load(f)                
-        if isinstance(p,list):          
-            p=dict(p[0])
-
-        now_uid=p["uid"]    
-        now_point=p["coordness"]
-        now_point=now_point.replace("POINT(","").replace(")","")
-    #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
-
-data=now_point.split()
-now_point=[]
-now_point.append(float(data[0]))
-now_point.append(float(data[1]))
 
 status=0
-    #머신을 어떤 상태로 만들지 결정하기 
+#머신을 어떤 상태로 만들지 결정하기 
 leng=len(point)
 i=0
 
 while (1):
-    """request=open("test.json","r")
+    request=open("test.json","r")
     #요청받는 값은 json형태이다
     with request as f:
         p=json.load(f)                
@@ -90,9 +74,8 @@ while (1):
         if i==leng:
             break
 
-    time.sleep(1)
-    now_point[0]+=3
-    now_point[1]-=3
+    time.sleep(30)
+    #30초마다 좌표를 확인해준다.
 
 if status==0:
     MS.swich(status,now_uid)
