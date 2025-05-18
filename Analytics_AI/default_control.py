@@ -8,6 +8,7 @@ class control:
         self.level=0
         self.home_point=""
         self.now_point=""
+        self.now_uid=""
 
     def get (self):
         self.level=0
@@ -30,6 +31,7 @@ class control:
             if isinstance(p,list):          
                 p=dict(p[0])
 
+            self.now_uid=p["uid"]    
             now_point=p["coordness"]
             self.now_point=now_point.replace("POINT(","").replace(")","")
     #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
@@ -51,7 +53,8 @@ class control:
         if PR.range(home_point,now_point)<2:
                  self.level=1
         #현재 위치를 근거로 집 위치와 비교해서 곧 도착하는지 확인하기
-        MS.swich(self.level)
+    
+        MS.swich(self.level,self.now_uid)
         print("집을 들어올때 디폴트")
     
     def home_out(self):
@@ -69,7 +72,8 @@ class control:
         if PR.range(home_point,now_point)>2:
             self.level=0
         #현재 위치를 근거로 집 위치와 비교해서 나갔는지 확인하기
-        MS.swich(self.level)
+
+        MS.swich(self.level,self.now_uid)
         print("집을 나갈때 디폴트")
     
     def control_panel(self,b):
