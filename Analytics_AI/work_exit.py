@@ -33,8 +33,9 @@ request=open("test.json","r")
 with request as f:
      p=json.load(f)                
      if isinstance(p,list):          
-         p=dict(p[0])
+        p=dict(p[0])
 
+     now_uid=p["uid"]    
      now_point=p["coordness"]
      now_point=now_point.replace("POINT(","").replace(")","")
 #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
@@ -54,14 +55,14 @@ status=1
 leng=len(point)
 
 for i in range(0,leng):
-    if pr.range(now_point,point[i])>100:
+    if pr.range(now_point,point[i])>5:
         status=0
         break
     
     if i == leng - 2:
-        MS.swich(status)
+        MS.swich(status,now_uid)
     # 거의 도착했다고 판단하고 미리 켜놓기
 
 if status==0:
-    MS.swich(status)
+    MS.swich(status,now_uid)
 # 혹시라도 거의 도착했는데 방향을 틀면 다시 꺼놓기
