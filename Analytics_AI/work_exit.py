@@ -1,5 +1,6 @@
 import json
 import machine_swich as MS
+import point_range as pr
 #키고 끄는것 혹은 어떤 기기를 끄고 끌지는 숫자로 상황을 판별해서 뭘 키고 끌지 결정하는 파일
 
 num=8
@@ -32,19 +33,21 @@ request=open("test.json","r")
 with request as f:
      p=json.load(f)                
      if isinstance(p,list):          
-         p=dict(p[0])
+        p=dict(p[0])
 
+     now_uid=p["uid"]    
      now_point=p["coordness"]
      now_point=now_point.replace("POINT(","").replace(")","")
 #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
 
-data=now_point.split()  
-row=float(data[0])
-column=float(data[1])
+data=now_point.split()
+now_point=[]
+now_point.append(float(data[0]))
+now_point.append(float(data[1]))
 #좌표 넣기
 
 
-print(row,column)
+print(now_point)
 #위도,경도에 뭐가 들어가있는지 확인하는 용도 나중에 지워야함
 
 status=1
@@ -52,19 +55,14 @@ status=1
 leng=len(point)
 
 for i in range(0,leng):
-    if row < point[i][0]-10 or row > point[i][0]+10: 
+    if pr.range(now_point,point[i])>5:
         status=0
         break
-    #위도
-    elif column < point[i][1]-10 or column > point[i][1]+10:
-        status=0
-        break
-    #경도
     
     if i == leng - 2:
-        MS.swich(status)
+        MS.swich(status,now_uid)
     # 거의 도착했다고 판단하고 미리 켜놓기
 
 if status==0:
-    MS.swich(status)
+    MS.swich(status,now_uid)
 # 혹시라도 거의 도착했는데 방향을 틀면 다시 꺼놓기
