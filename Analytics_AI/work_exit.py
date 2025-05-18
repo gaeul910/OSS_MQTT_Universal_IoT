@@ -1,6 +1,7 @@
 import json
 import machine_swich as MS
 import point_range as pr
+import time
 #키고 끄는것 혹은 어떤 기기를 끄고 끌지는 숫자로 상황을 판별해서 뭘 키고 끌지 결정하는 파일
 
 num=8
@@ -29,39 +30,69 @@ print(point)
 #포인트에 뭐가 들어갔는지 확인하는 용도 나중에 지워야함
 
 request=open("test.json","r")
-#요청받는 값은 json형태이다
+    #요청받는 값은 json형태이다
 with request as f:
-     p=json.load(f)                
-     if isinstance(p,list):          
-        p=dict(p[0])
+        p=json.load(f)                
+        if isinstance(p,list):          
+            p=dict(p[0])
 
-     now_uid=p["uid"]    
-     now_point=p["coordness"]
-     now_point=now_point.replace("POINT(","").replace(")","")
-#현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
+        now_uid=p["uid"]    
+        now_point=p["coordness"]
+        now_point=now_point.replace("POINT(","").replace(")","")
+    #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
 
 data=now_point.split()
 now_point=[]
 now_point.append(float(data[0]))
 now_point.append(float(data[1]))
-#좌표 넣기
 
-
-print(now_point)
-#위도,경도에 뭐가 들어가있는지 확인하는 용도 나중에 지워야함
-
-status=1
-#머신을 어떤 상태로 만들지 결정하기 
+status=0
+    #머신을 어떤 상태로 만들지 결정하기 
 leng=len(point)
+i=0
 
-for i in range(0,leng):
-    if pr.range(now_point,point[i])>5:
-        status=0
-        break
+while (1):
+    """request=open("test.json","r")
+    #요청받는 값은 json형태이다
+    with request as f:
+        p=json.load(f)                
+        if isinstance(p,list):          
+            p=dict(p[0])
+
+        now_uid=p["uid"]    
+        now_point=p["coordness"]
+        now_point=now_point.replace("POINT(","").replace(")","")
+    #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
+
+    data=now_point.split()
+    now_point=[]
+    now_point.append(float(data[0]))
+    now_point.append(float(data[1]))
+    #좌표 넣기"""
+
     
-    if i == leng - 2:
-        MS.swich(status,now_uid)
-    # 거의 도착했다고 판단하고 미리 켜놓기
+    print(now_point,"\ni: ",i,"\n좌표사이의 거리: ",pr.range(now_point,point[i]),"\n좌표사이의 거리: ",pr.range(point[i],point[i+1]),"\n현재좌표사이의 기울기: ",pr.slope(now_point,point[i]),"\n좌표사이의 기울기: ",pr.slope(point[i+1],point[i]))
+    #위도,경도에 뭐가 들어가있는지 확인하는 용도 나중에 지워야함
+
+    if now_point:
+        if pr.range(now_point,point[i])>pr.range(point[i],point[i+1]):
+            if(pr.slope(now_point,point[i])>pr.slope(point[i+1],point[i])-7 and pr.slope(now_point,point[i])<pr.slope(point[i+1],point[i])+7):
+                i=i+1
+            else:
+                status=0
+                break
+    
+        if i == leng - 2:
+            status=1
+            MS.swich(status,now_uid)
+        # 거의 도착했다고 판단하고 미리 켜놓기
+
+        if i==leng:
+            break
+
+    time.sleep(1)
+    now_point[0]+=3
+    now_point[1]-=3
 
 if status==0:
     MS.swich(status,now_uid)
