@@ -4,7 +4,6 @@ import 'lobby.dart';
 // 로그인 페이지 위젯 (StatefulWidget으로 입력값 관리)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
-
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
@@ -13,8 +12,8 @@ class _LoginPageState extends State<LoginPage> {
   // 올바른 인증코드를 미리 지정 (차후 API에서 랜덤 시드로 결정된 코드를 받아와야 한다.)
   final String correctCode = '123456';
 
-  // 문자열 입력을 위한 컨트롤러
-  final TextEditingController _textController = TextEditingController();
+  final TextEditingController _textController = TextEditingController(); // ip 입력 컨트롤러
+  final TextEditingController _portController = TextEditingController();
 
   // 사용자가 입력한 인증코드 저장 변수
   String _enteredCode = '';
@@ -22,11 +21,17 @@ class _LoginPageState extends State<LoginPage> {
   // 로그인 버튼 클릭 시 실행되는 함수
   void _onLogin(BuildContext context, String code) {
     String inputText = _textController.text.trim(); // 문자열 입력값
-
+    String portText = _portController.text.trim();
     // 주소 입력이 비었는지 체크
     if (inputText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('주소를 입력해주세요.')),
+      );
+      return;
+    }
+    if (portText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('포트 번호를 입력해주세요.')),
       );
       return;
     }
@@ -48,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('주소 + 6자리 코드 입력')),
+      appBar: AppBar(title: const Text('ip주소 + port 번호 + 인증코드 입력')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -63,6 +68,18 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             const SizedBox(height: 24), // 위젯 사이 간격
+
+
+            // 포트 번호 입력 필드
+            TextField(
+              controller: _portController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: '포트 번호 입력',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // 인증코드 입력 필드 (Pinput)
             Pinput(
