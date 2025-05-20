@@ -50,10 +50,19 @@ def logs():
         return ret
         
     elif(request.method == 'POST'):
-        uid = request.args("uid", "str")
-        jsonoutput = open("templates/locationforupload.json", "w")
-        jsonoutput.write(request.data)
-        return
+        try:
+            get_dict = request.get_json()
+            uid = get_dict["uid"]
+            coordinate = get_dict["coordinate"]
+            issued = get_dict["time"]
+            location_id = gen_id("locationlog", "id")
+            if location_id == -1:
+                return "POST unsuccessful, Error while id generation"
+            query = "INSERT INTO locationlog VALUES (%s, %s, ST_GeomFromText(%s), %s)"
+            ret = cursor.execute(query, (location_id, uid, coordinate, issued))
+        except:
+            return f"POST unsuccessful, {ret}"
+        return "Success"
 
 @app.route("/location/fav/point", methods=['GET', 'POST'])
 
