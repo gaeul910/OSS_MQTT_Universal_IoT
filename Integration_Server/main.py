@@ -19,15 +19,18 @@ cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 def gen_id(table_name, id_name):
     try:
-        table_name = str(table_name)
-        id_name = str(id_name)
-        cursor.execute("SELECT MAX(%s) AS highest_id FROM %s", (table_name, id_name))
+        allowed_table_name = ["clients", "events", "locationlog", "userfavlocation", "userfavroute", "usernotifications", "users"]
+        if table_name not in allowed_table_name:
+            return -1
+        query = "SELECT MAX(`{}`) AS highest_id FROM `{}`".format(id_name, table_name)
+        cursor.execute(query)
         getdict = cursor.fetchone()
         ret_id = getdict['highest_id']
-        if not ret_id:
-            ret = 0
-        ret_id += 1
-        return ret_id
+        if ret_id == 0:
+            return 1
+        if not ret_id and ret_id != 0:
+            return 0
+        return ret_id + 1
     except:
         return -1
         
