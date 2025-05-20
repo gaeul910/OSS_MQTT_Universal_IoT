@@ -38,10 +38,16 @@ def gen_id(table_name, id_name):
 
 def logs():
     if(request.method == 'GET'):
-        uid = request.args.get("uid", "str")
-        if(uid == "sample-uid"):
-            return render_template("location.json")
-        return "Request by UID is still under development"
+        uid = request.headers["uid"]
+        dict_req = request.get_json()
+        location_id = dict_req["location_id"]
+        uid = int(uid)
+        query = "SELECT * FROM locationlog WHERE uid = %s AND id = %s"
+        cursor.execute(query, (uid, location_id,))
+        ret = cursor.fetchall()
+        if not ret:
+            return "No data found for uid: {} after location_id: {}".format(uid, location_id)
+        return ret
         
     elif(request.method == 'POST'):
         uid = request.args("uid", "str")
