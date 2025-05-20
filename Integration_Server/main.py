@@ -42,8 +42,8 @@ def logs():
         dict_req = request.get_json()
         location_id = dict_req["location_id"]
         uid = int(uid)
-        query = "SELECT * FROM locationlog WHERE uid = %s AND id = %s"
-        cursor.execute(query, (uid, location_id,))
+        query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id = %s"
+        cursor.execute(query, (uid, location_id))
         ret = cursor.fetchall()
         if not ret:
             return "No data found for uid: {} after location_id: {}".format(uid, location_id)
