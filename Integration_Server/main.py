@@ -17,6 +17,20 @@ except:
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
+def gen_id(table_name, id_name):
+    try:
+        table_name = str(table_name)
+        id_name = str(id_name)
+        cursor.execute("SELECT MAX(%s) AS highest_id FROM %s", (table_name, id_name))
+        getdict = cursor.fetchone()
+        ret_id = getdict['highest_id']
+        if not ret_id:
+            ret = 0
+        ret_id += 1
+        return ret_id
+    except:
+        return -1
+        
 @app.route("/location/logs", methods=['GET', 'POST'])
 
 def logs():
