@@ -178,6 +178,12 @@ def eventlogs():
         try:
             get_dict = request.get_json()
             event_id = get_dict["event_id"]
+            query = "DELETE FROM eventlog WHERE id = %s"
+            ret = cursor.execute(query, (event_id, ))
+            return "Success"
+        except:
+            return "DELETE unsuccessful"
+
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
