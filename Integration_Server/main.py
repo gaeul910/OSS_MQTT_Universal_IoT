@@ -127,6 +127,13 @@ def route():
             endlocation_id = get_dict["endlocation_id"]
             status = get_dict["status"]
             route_id = gen_id("userfavroute", "id")
+            if route_id == -1:
+                return "POST unsuccessful, Error while id generation"
+            query = "INSERT INTO userfavroute VALUES (%s, %s, %s, ST_GeomFromText(%s), %s)"
+            ret = cursor.execute(query, (route_id, startlocation_id, endlocation_id, route, status))
+        except:
+            return f"POST unsuccessful, {ret}"
+        return "Success"
     
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
