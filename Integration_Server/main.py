@@ -135,6 +135,17 @@ def route():
             return f"POST unsuccessful, {ret}"
         return "Success"
     
+    elif(request.method == 'DELETE'):
+        try:
+            get_dict = request.get_json()
+            route_id = get_dict["route_id"]
+            uid = get_dict["uid"]
+            query = "DELETE FROM userfavroute WHERE id = %s AND uid = %s"
+            ret = cursor.execute(query, (route_id, uid, ))
+            return "Success"
+        except:
+            return "DELETE unsuccessful"
+    
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
 def eventlogs():
