@@ -160,11 +160,19 @@ def eventlogs():
         return ret
     
     elif(request.method == 'POST'):
-        uid = request.args.get("uid", "str")
-        jsonoutput = open("templates/eventforupload.json", "w")
-        jsonoutput.write(request.data)
-        return
-    
+        try:
+            get_dict = request.get_json()
+            log_id = get_dict["log_id"]
+            event_id = get_dict["location_id"]
+            about = get_dict["about"]
+            event_id = gen_id("eventlog", "id")
+            if event_id == -1:
+                return "POST unsuccessful, Error while id generation"
+            query = "INSERT INTO eventlog VALUES (%s, %s, %s, %s)"
+            ret = cursor.execute(query, (event_id, event_id, log_id, about, ))
+        except:
+            return f"POST unsuccessful, {ret}"
+        return "Success"
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
