@@ -95,6 +95,16 @@ def point():
             return f"POST unsuccessful, {ret}"
         return "Success"
     
+    elif(request.method == 'DELETE'):
+        try:
+            get_dict = request.get_json()
+            point_id = get_dict["point_id"]
+            uid = get_dict["uid"]
+            query = "DELETE FROM userfavlocation WHERE id = %s AND uid = %s"
+            ret = cursor.execute(query, (point_id, ))
+        except:
+            return "DELETE unsuccessful"
+        return "Success"
 @app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
 
 def route():
