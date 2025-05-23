@@ -173,6 +173,11 @@ def eventlogs():
         except:
             return f"POST unsuccessful, {ret}"
         return "Success"
+    
+    elif(request.method == 'DELETE'):
+        try:
+            get_dict = request.get_json()
+            event_id = get_dict["event_id"]
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
