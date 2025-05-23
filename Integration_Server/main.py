@@ -87,6 +87,13 @@ def point():
             alias = get_dict["alias"]
             status = get_dict["status"]
             point_id = gen_id("userfavlocation", "id")
+            if point_id == -1:
+                return "POST unsuccessful, Error while id generation"
+            query = "INSERT INTO userfavlocation VALUES (%s, %s, %s, ST_GeomFromText(%s), %s)"
+            ret = cursor.execute(query, (point_id, uid, alias, coordinate, status))
+        except:
+            return f"POST unsuccessful, {ret}"
+        return "Success"
     
 @app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
 
