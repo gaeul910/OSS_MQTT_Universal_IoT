@@ -80,10 +80,13 @@ def point():
         return ret
     
     elif(request.method == 'POST'):
-        uid = request.args.get("uid", "str")
-        jsonoutput = open("templates/favlocationforupload.json", "w")
-        jsonoutput.write(request.data)
-        return
+        try:
+            get_dict = request.get_json()
+            uid = get_dict["uid"]
+            coordinate = get_dict["coordinate"]
+            alias = get_dict["alias"]
+            status = get_dict["status"]
+            point_id = gen_id("userfavlocation", "id")
     
 @app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
 
