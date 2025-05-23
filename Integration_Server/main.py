@@ -150,11 +150,14 @@ def route():
 
 def eventlogs():
     if(request.method == 'GET'):
-        uid = request.args.get("uid", "str")
-        locationid = request.args.get("locationid", "str")
-        if(uid == "sample-uid" and locationid == '1'):
-            return render_template("event.json")
-        return "Request by UID and Location ID is still under development"
+        dict_req = request.get_json()
+        event_id = dict_req["location_id"]
+        query = "SELECT * FROM eventlog WHERE location_id = %s"
+        cursor.execute(query, (event_id, ))
+        ret = cursor.fetchall()
+        if not ret:
+            return "No data found for event_id: {}".format(event_id)
+        return ret
     
     elif(request.method == 'POST'):
         uid = request.args.get("uid", "str")
