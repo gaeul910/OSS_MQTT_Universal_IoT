@@ -34,7 +34,7 @@ def gen_id(table_name, id_name):
     except:
         return -1
         
-@app.route("/location/logs", methods=['GET', 'POST'])
+@app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
     if(request.method == 'GET'):
@@ -64,7 +64,7 @@ def logs():
             return f"POST unsuccessful, {ret}"
         return "Success"
 
-@app.route("/location/fav/point", methods=['GET', 'POST'])
+@app.route("/location/fav/point", methods=['GET', 'POST', 'DELETE'])
 
 def point():
     if(request.method == 'GET'):
@@ -79,7 +79,7 @@ def point():
         jsonoutput.write(request.data)
         return
     
-@app.route("/location/fav/route", methods=['GET', 'POST'])
+@app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
 
 def route():
     if(request.method == 'GET'):
@@ -94,7 +94,7 @@ def route():
         jsonoutput.write(request.data)
         return
     
-@app.route("/event/eventlogs", methods=['GET', 'POST'])
+@app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
 def eventlogs():
     if(request.method == 'GET'):
