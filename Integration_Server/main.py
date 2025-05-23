@@ -40,6 +40,7 @@ def logs():
     if(request.method == 'GET'):
         uid = request.headers["uid"]
         dict_req = request.get_json()
+        uid = dict_req["uid"]
         location_id = dict_req["location_id"]
         uid = int(uid)
         query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id = %s"
