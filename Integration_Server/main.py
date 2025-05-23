@@ -120,10 +120,13 @@ def route():
         return ret
     
     elif(request.method == 'POST'):
-        uid = request.args.get("uid", "str")
-        jsonoutput = open("templates/routelocationforupload.json", "w")
-        jsonoutput.write(request.data)
-        return
+        try:
+            get_dict = request.get_json()
+            route = get_dict["route"]
+            startlocation_id = get_dict["startlocation_id"]
+            endlocation_id = get_dict["endlocation_id"]
+            status = get_dict["status"]
+            route_id = gen_id("userfavroute", "id")
     
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
