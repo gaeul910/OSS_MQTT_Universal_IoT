@@ -1,8 +1,8 @@
 ﻿CREATE TABLE `eventlog` (
 	`id`	INT(11)	NOT NULL,
-	`locationid`	INT(11)	NOT NULL,
-	`time`	DATETIME	NULL,
-	`eventid`	INT(11)	NULL
+	`location_id`	INT(11)	NOT NULL,
+	`log_id`	INT(11)	NOT NULL,
+	`about`	INT(11)	NULL
 );
 
 CREATE TABLE `userfavroute` (
