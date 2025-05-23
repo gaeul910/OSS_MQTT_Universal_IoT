@@ -105,14 +105,19 @@ def point():
         except:
             return "DELETE unsuccessful"
         return "Success"
+    
 @app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
 
 def route():
     if(request.method == 'GET'):
-        uid = request.args.get("uid", "str")
-        if(uid == "sample-uid"):
-            return render_template("favroute.json")
-        return "Request by UID is still under development"
+        dict_req = request.get_json()
+        startlocation_id = dict_req["startlocation_id"]
+        query = "SELECT id, startlocation_id, endlocation_id, ST_AsText(route) AS route, status FROM userfavroute WHERE startlocation_id = %s"
+        cursor.execute(query, (startlocation_id, ))
+        ret = cursor.fetchall()
+        if not ret:
+            return "No data found for startlocation_id: {}".format(startlocation_id)
+        return ret
     
     elif(request.method == 'POST'):
         uid = request.args.get("uid", "str")
