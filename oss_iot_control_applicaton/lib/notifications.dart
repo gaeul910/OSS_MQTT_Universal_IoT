@@ -84,4 +84,15 @@ class NotificationService {
 
     debugPrint('백그라운드 알림 롱폴링이 시작되었습니다.');
   }
+
+  /// 롱 폴링 중지
+  void stopPolling() {
+    if (!_isPolling) return;
+    _pollingIsolate?.kill();
+    _receivePort?.close();
+    _pollingIsolate = null;
+    _receivePort = null;
+    _isPolling = false;
+    debugPrint('백그라운드 알림 롱폴링이 중지되었습니다.');
+  }
 }
