@@ -108,4 +108,15 @@ class NotificationService {
 
     debugPrint('알림 수신 및 상태 업데이트: ID=$id, 내용=$content');
   }
+
+
+  /// 직접 호출 가능한 알림 표시 (테스트용)
+  Future<void> showNotification({
+    int id = 0,
+    String title = '테스트 알림',
+    String body = '이것은 테스트 알림입니다.',
+  }) async {
+    await _showNotification(id, title, body);
+  }
+
 }
