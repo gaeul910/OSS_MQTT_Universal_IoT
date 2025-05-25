@@ -75,4 +75,13 @@ class NotificationService {
         'uid': _uid, // 추가!
       },
     );
+
+    _receivePort!.listen((dynamic message) {
+      if (message is Map<String, dynamic>) {
+        _handleNotification(message);
+      }
+    });
+
+    debugPrint('백그라운드 알림 롱폴링이 시작되었습니다.');
+  }
 }
