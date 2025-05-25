@@ -42,4 +42,18 @@ class NotificationService {
     _port = port;
     _uid = uid.toString();
   }
+
+  /// 알림 플러그인 초기화
+  Future<void> initialize() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+    AndroidInitializationSettings('@mipmap/ic_launcher');
+    const DarwinInitializationSettings initializationSettingsIOS =
+    DarwinInitializationSettings();
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
+    await _notificationsPlugin.initialize(initializationSettings);
+  }
+
 }
