@@ -158,4 +158,61 @@ class NotificationService {
       return false;
     }
   } */
+
+  /// 롱 폴링 작업 (Isolate에서 실행)
+  static Future<void> _pollingTask(Map<String, dynamic> params) async {
+    final SendPort sendPort = params['sendPort'];
+    final String ip = params['ip'];
+    final String port = params['port'];
+    final String uid = params['uid'];
+
+    Future<List<Map<String, dynamic>>> _longPoll() async {
+      try {
+        final syncResponse = await http.get(
+          Uri.parse('http://$ip:$port/notification/sync'),
+          headers: {
+            'uid': uid,
+          },
+        ).timeout(const Duration(seconds: 40));
+
+        if (syncResponse.statusCode == 200) {
+          final idList = json.decode(syncResponse.body);
+          if (idList is List && idList.isNotEmpty) {
+            List<Map<String, dynamic>> notifications = [];
+            for (final item in idList) {
+              final idValue = (item is Map && item.containsKey('id')) ? item['id'] : item;
+              final notiResponse = await http.get(
+                Uri.parse('http://$ip:$port/notification/getnoti'),
+                headers: {
+                  'id': idValue.toString(),
+                },
+              );
+              if (notiResponse.statusCode == 200) {
+                final notiData = json.decode(notiResponse.body);
+                if (notiData is Map<String, dynamic> && notiData.isNotEmpty) {
+                  notifications.add(notiData);
+                } else if (notiData is List && notiData.isNotEmpty && notiData.first is Map<String, dynamic>) {
+                  notifications.add(notiData.first); // 리스트의 첫 Map만 추가 (여러 개면 반복문 사용)
+                }
+              }
+            }
+            return notifications;
+          }
+        }
+        return [];
+      } catch (e) {
+        print('롱 폴링 중 에러 발생: $e');
+        await Future.delayed(const Duration(seconds: 5));
+        return [];
+      }
+    }
+
+    while (true) {
+      final notifications = await _longPoll();
+      for (final notification in notifications) {
+        sendPort.send(notification);
+      }
+      await Future.delayed(const Duration(seconds: 1));
+    }
+  }
 }
