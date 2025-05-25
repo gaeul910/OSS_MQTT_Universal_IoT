@@ -24,4 +24,15 @@ class NotificationService {
   late String _uid; // String으로 선언
 
   final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+
+  /// 알림 권한 요청 (앱 시작 시 호출)
+  Future<void> requestNotificationPermission() async {
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(alert: true, badge: true, sound: true);
+  }
 }
