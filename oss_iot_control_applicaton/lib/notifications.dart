@@ -137,4 +137,25 @@ class NotificationService {
       platformChannelSpecifics,
     );
   }
+
+/* 알림 상태 업데이트 (stat = 1로 설정)
+  Future<bool> _updateNotificationStatus(int notificationId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://$_ip:$_port/notification/getnoti'),
+        headers: {
+          'Content-Type': 'application/json',
+          'uid': _uid,
+        },
+        body: json.encode({
+          'id': notificationId,
+          'stat': 1,
+        }),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('알림 상태 업데이트 실패: $e');
+      return false;
+    }
+  } */
 }
