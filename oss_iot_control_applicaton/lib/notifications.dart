@@ -56,4 +56,23 @@ class NotificationService {
     await _notificationsPlugin.initialize(initializationSettings);
   }
 
+  /// 롱 폴링 시작
+  Future<void> startPolling() async {
+    if (_isPolling) return;
+    if (_ip.isEmpty || _port.isEmpty) {
+      debugPrint('서버 정보가 설정되지 않았습니다.');
+      return;
+    }
+    _isPolling = true;
+    _receivePort = ReceivePort();
+
+    _pollingIsolate = await Isolate.spawn(
+      _pollingTask,
+      {
+        'sendPort': _receivePort!.sendPort,
+        'ip': _ip,
+        'port': _port,
+        'uid': _uid, // 추가!
+      },
+    );
 }
