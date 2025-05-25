@@ -109,7 +109,6 @@ class NotificationService {
     debugPrint('알림 수신 및 상태 업데이트: ID=$id, 내용=$content');
   }
 
-
   /// 직접 호출 가능한 알림 표시 (테스트용)
   Future<void> showNotification({
     int id = 0,
@@ -119,4 +118,23 @@ class NotificationService {
     await _showNotification(id, title, body);
   }
 
+  /// 내부용 알림 표시
+  Future<void> _showNotification(int id, String title, String body) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    AndroidNotificationDetails(
+      'iot_notification_channel',
+      'IoT 알림',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const NotificationDetails platformChannelSpecifics =
+    NotificationDetails(android: androidPlatformChannelSpecifics);
+
+    await _notificationsPlugin.show(
+      id,
+      title,
+      body,
+      platformChannelSpecifics,
+    );
+  }
 }
