@@ -35,4 +35,11 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(alert: true, badge: true, sound: true);
   }
+
+  /// 서버 정보 세팅 (로그인 후 호출)
+  void configure({required String ip, required String port, required dynamic uid}) {
+    _ip = ip;
+    _port = port;
+    _uid = uid.toString();
+  }
 }
