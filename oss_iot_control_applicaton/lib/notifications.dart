@@ -95,4 +95,17 @@ class NotificationService {
     _isPolling = false;
     debugPrint('백그라운드 알림 롱폴링이 중지되었습니다.');
   }
+
+  /// 알림 표시 및 상태 업데이트
+  Future<void> _handleNotification(Map<String, dynamic> notification) async {
+    final int id = notification['id'] is int
+        ? notification['id']
+        : int.tryParse(notification['id'].toString()) ?? 0;
+    final String content = notification['content']?.toString() ?? '새로운 알림이 있습니다.';
+
+    await _showNotification(id, 'IoT 알림', content);
+    //await _updateNotificationStatus(id); //나중에 추가할 것
+
+    debugPrint('알림 수신 및 상태 업데이트: ID=$id, 내용=$content');
+  }
 }
