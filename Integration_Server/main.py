@@ -1,14 +1,19 @@
 from flask import Flask, render_template, request
+import configparser
 import pymysql
 import sys
 import time
 
 app = Flask(__name__)
-MYSQL_HOST = "db"
-MYSQL_PORT = 3306
-MYSQL_USERNAME = "root"
-MYSQL_PASSWORD = "defaultpassword1"
-MYSQL_DB = "iot-db"
+
+properties = configparser.ConfigParser()
+properties.read("./config.properties")
+MYSQL_HOST = properties["CONNECTION"]["host"]
+MYSQL_PORT = int(properties["CONNECTION"]["port"])
+MYSQL_USERNAME = properties["CONNECTION"]["user"]
+MYSQL_PASSWORD = properties["CONNECTION"]["password"]
+MYSQL_DB = properties["CONNECTION"]["db"]
+
 try:
     conn = pymysql.connect(host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USERNAME, passwd=MYSQL_PASSWORD, database=MYSQL_DB, autocommit=True)
 except:
