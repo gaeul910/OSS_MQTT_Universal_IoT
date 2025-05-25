@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'lobby.dart';
+import 'notifications.dart';
 // 로그인 페이지 위젯 (StatefulWidget으로 입력값 관리)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -38,6 +39,13 @@ class _LoginPageState extends State<LoginPage> {
 
     // 인증코드가 일치하는지 체크
     if (code == correctCode) {
+      const int userId = 123;
+      NotificationService().configure(
+        ip: inputText,
+        port: portText,
+        uid: userId,
+      );
+      NotificationService().startPolling();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LobbyScreen()),
