@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login.dart'; // 로그인 화면 import
-
-
-import 'package:flutter/material.dart';
-import 'login.dart'; // 로그인 화면 import
+import 'notifications.dart';
 
 
 class SettingsScreen extends StatefulWidget {
@@ -57,8 +54,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
               );
               if (shouldLogout == true) {
+                NotificationService().stopPolling();
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
                 );
               }
