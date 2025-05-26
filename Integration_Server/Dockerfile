@@ -8,10 +8,6 @@ ARG APP_FILES=./app
 
 COPY ${APP_FILES} .
 
-RUN pip3 install flask
-
-RUN pip3 install pymysql
-
-RUN pip3 install cryptography
+RUN pip3 install -r requirements.txt
 
 ENTRYPOINT [ "python3" , "/app/main.py" ]
