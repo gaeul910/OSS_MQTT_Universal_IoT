@@ -4,7 +4,7 @@ WORKDIR /app/
 
 ARG DB_ROOT_PASSWORD="defaultpassword"
 
-ARG APP_FILES=.
+ARG APP_FILES=./app
 
 COPY ${APP_FILES} .
 
