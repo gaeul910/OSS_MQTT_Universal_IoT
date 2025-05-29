@@ -1,5 +1,17 @@
-def swich(a):
+import requests as r
+from datetime import datetime
+
+
+def swich(a,uid):
     if a:
-        print("머신이 켜짐")
+        machine_status="머신들이 작동을 시작하였습니다"
     else: 
-        print("머신이 꺼짐")
+        machine_status="머신들이 작동을 멈춥니다"
+
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # r.head('{"uid": "0"}')
+    headers = {"uid": uid, "content-type": "application/json"}
+    data = '{"content": "%s", "time": "%s", "about": 1}'%(machine_status,now)
+    #res = r.post("http://localhost:3000/notification/postnoti", headers=headers,data=data)
+    print(data,"  ",headers)
+

@@ -1,8 +1,8 @@
 ﻿CREATE TABLE `eventlog` (
 	`id`	INT(11)	NOT NULL,
-	`locationid`	INT(11)	NOT NULL,
-	`time`	DATETIME	NULL,
-	`eventid`	INT(11)	NULL
+	`location_id`	INT(11)	NOT NULL,
+	`log_id`	INT(11)	NOT NULL,
+	`about`	INT(11)	NULL
 );
 
 CREATE TABLE `userfavroute` (
@@ -34,6 +34,15 @@ CREATE TABLE `locationlog` (
 	`time`	DATETIME	NULL
 );
 
+CREATE TABLE `usernotifications` (
+	`id`	INT(11)	NOT NULL,
+	`uid`	INT(11)	NOT NULL,
+	`content`	TEXT	NULL,
+	`time`	DATETIME	NULL,
+	`stat`	BOOLEAN	NULL,
+	`about`	INT(11)	NULL
+);
+
 CREATE TABLE `clients` (
 	`id`	INT(11) NOT NULL	NOT NULL,
 	`token`	VARCHAR(256)	NULL,
@@ -60,6 +69,10 @@ ALTER TABLE `userfavlocation` ADD CONSTRAINT `PK_USERFAVLOCATION` PRIMARY KEY (
 );
 
 ALTER TABLE `locationlog` ADD CONSTRAINT `PK_LOCATIONLOG` PRIMARY KEY (
+	`id`
+);
+
+ALTER TABLE `usernotifications` ADD CONSTRAINT `PK_USERNOTIFICATIONS` PRIMARY KEY (
 	`id`
 );
 
