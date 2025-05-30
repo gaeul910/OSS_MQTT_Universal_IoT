@@ -158,6 +158,8 @@ def update():
     else:
         cluster_store=res.text
 
+    # 2. 실시간 로그 업데이트 실행 (마지막 날짜 기준)
+    for _, row in logs.iterrows():
         update_or_create_cluster(row, cluster_store)
 
     # 3. 60일 이상 미방문 클러스터 제거
