@@ -153,15 +153,16 @@ def route():
 
 def visits():
     try:
+        visit_identifier = 0
         dict_req = request.get_json()
         location_id = dict_req["location_id"]
         lookup_days = dict_req["lookup_days"]
-        query = 'SELECT count(*) AS visit_times FROM eventlog WHERE location_id = %s AND time BETWEEN NOW() - INTERVAL %s DAY AND NOW()'
-        cursor.execute(query, (location_id, lookup_days, ))
+        query = 'SELECT count(*) AS visit_times FROM eventlog WHERE location_id = %s AND about = %s AND time BETWEEN NOW() - INTERVAL %s DAY AND NOW()'
+        cursor.execute(query, (location_id, visit_identifier, lookup_days, ))
         ret = cursor.fetchone()
     except:
-        return -1
-    return ret["visit_times"]
+        return "Internel Server Error", 500
+    return str(ret["visit_times"])
 
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
