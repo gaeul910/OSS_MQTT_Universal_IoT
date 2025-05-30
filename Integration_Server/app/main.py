@@ -156,6 +156,13 @@ def visits():
         dict_req = request.get_json()
         location_id = dict_req["location_id"]
         lookup_days = dict_req["lookup_days"]
+        query = 'SELECT count(*) AS visit_times FROM eventlog WHERE location_id = %s AND time BETWEEN NOW() - INTERVAL %s DAY AND NOW()'
+        cursor.execute(query, (location_id, lookup_days, ))
+        ret = cursor.fetchone()
+    except:
+        return -1
+    return ret["visit_times"]
+
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
 def eventlogs():
