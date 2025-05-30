@@ -14,6 +14,13 @@ def cluster_to_log_entries(cluster_store):
     for i, (cid, info) in enumerate(cluster_store.items(), start=1):
         lat = round(info['lat'], 6)
         lon = round(info['lon'], 6)
+        latest_date = datetime.fromisoformat(info['last_visit'])
+        log_entries.append({
+            "id": info.get("id", i), 
+            "coordness": f"POINT({lon:.6f} {lat:.6f})",
+            "time": latest_date.isoformat() + "Z",
+            "uid": info.get("uid", str(uuid.uuid4())), 
+        })
     return log_entries
     return log_entries
 
