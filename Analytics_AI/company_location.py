@@ -164,6 +164,12 @@ def update():
     reference_date = logs['timestamp'].max().date()
     cluster_store = prune_old_clusters(cluster_store, reference_date)
 
+    cluster_store = {
+        cid: info for cid, info in cluster_store.items()
+        #방문일수로 필터링
+        if len(info['visit_days']) >= 10
+    }
+    # 결과 출력 내가 너한테 데이터를 줄때 클러스터 데이터랑// 회사 좌표를 줄꺼야
     
     output=cluster_store_to_log_entries(cluster_store)
     
