@@ -108,5 +108,9 @@ def prune_old_clusters(cluster_store, reference_date, max_gap_days=60):
         if date.fromisoformat(info['last_visit']) >= cutoff
     }
 
+# -------------------- 로그 전처리 --------------------
+def preprocess_logs(raw_logs):
+    parsed_data = []
+    return pd.DataFrame(parsed_data)
     return log_entries
 
