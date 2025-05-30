@@ -87,5 +87,11 @@ def update_or_create_cluster(log, cluster_store):
     lat, lon = log['lat'], log['lon']
     date = log['timestamp'].date().isoformat()
 
+    for cid, info in cluster_store.items():
+        if is_same_cluster(lat, lon, info['lat'], info['lon']):
+            info['visit_days'].add(date)
+            info['last_visit'] = max(info['last_visit'], date)
+            return
+
     return log_entries
 
