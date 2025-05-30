@@ -22,5 +22,11 @@ def cluster_to_log_entries(cluster_store):
             "uid": info.get("uid", str(uuid.uuid4())), 
         })
     return log_entries
+
+# -------------------- 유틸리티 함수 --------------------
+def parse_point(coordness):
+    lon, lat = coordness.replace("POINT(", "").replace(")", "").split()
+    return float(lat), float(lon)
+
     return log_entries
 
