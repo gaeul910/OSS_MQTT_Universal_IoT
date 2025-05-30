@@ -148,7 +148,22 @@ def route():
             return "Success"
         except:
             return "DELETE unsuccessful"
-    
+
+@app.route("/event/visits", methods=['GET'])
+
+def visits():
+    try:
+        visit_identifier = 0
+        dict_req = request.get_json()
+        location_id = dict_req["location_id"]
+        lookup_days = dict_req["lookup_days"]
+        query = 'SELECT count(*) AS visit_times FROM eventlog WHERE location_id = %s AND about = %s AND time BETWEEN NOW() - INTERVAL %s DAY AND NOW()'
+        cursor.execute(query, (location_id, visit_identifier, lookup_days, ))
+        ret = cursor.fetchone()
+    except:
+        return "Internel Server Error", 500
+    return ret
+
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
 def eventlogs():
