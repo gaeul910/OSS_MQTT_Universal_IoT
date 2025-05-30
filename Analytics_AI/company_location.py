@@ -131,5 +131,12 @@ def cluster_store_to_log_entries(cluster_store):
         # 마지막 방문일 문자열 → datetime → ISO 문자열
         dt = datetime.fromisoformat(info['last_visit'])
         iso_time = dt.isoformat() + 'Z'
+        log_entries.append({
+            "id": info.get("id", i), 
+            "coordness": f"POINT({lon:.6f} {lat:.6f})",
+            "time": iso_time,
+            "stat": len(info.get('visit_days', [])),
+            "uid": info.get("uid", str(uuid.uuid4())), 
+        })
     return log_entries
 
