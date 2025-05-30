@@ -46,6 +46,12 @@ class control:
          p=json.load(f)                
          if isinstance(p,list):          
               p=dict(p[0])
+        #if문으로 나중에 오류코드나오면 좌표를 저장하지않는다
+         work_point=p["coordness"]
+         work_point=work_point.replace("POINT(","").replace(")","")
+         if work_point:
+            work_data= list(map(float, work_point.split()))
+            now_data=list(map(float, self.now_point.split()))
     def home_in(self):
         
         data=self.home_point.split()
