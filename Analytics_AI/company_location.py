@@ -121,5 +121,15 @@ def preprocess_logs(raw_logs):
             "uid": log['uid']
         })
     return pd.DataFrame(parsed_data)
+
+def cluster_store_to_log_entries(cluster_store):
+    log_entries = []
+    for i, (cid, info) in enumerate(cluster_store.items(), start=1):
+        # 좌표 소수점 6자리까지 포맷
+        lat = round(info['lat'], 6)
+        lon = round(info['lon'], 6)
+        # 마지막 방문일 문자열 → datetime → ISO 문자열
+        dt = datetime.fromisoformat(info['last_visit'])
+        iso_time = dt.isoformat() + 'Z'
     return log_entries
 
