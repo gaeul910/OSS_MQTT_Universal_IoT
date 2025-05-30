@@ -50,5 +50,8 @@ def detect_initial_clusters(logs):
     kms_per_radian = 6371.0088
     eps_km = 0.03  # 30m 이내
     db = DBSCAN(eps=eps_km / kms_per_radian, min_samples=7, algorithm='ball_tree', metric='haversine')
+    labels = db.fit_predict(coords)
+    logs['cluster'] = labels
+    logs['date'] = logs['timestamp'].dt.date
     return log_entries
 
