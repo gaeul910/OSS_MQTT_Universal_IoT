@@ -53,5 +53,15 @@ def detect_initial_clusters(logs):
     labels = db.fit_predict(coords)
     logs['cluster'] = labels
     logs['date'] = logs['timestamp'].dt.date
+
+    cluster_day_duration = defaultdict(timedelta)
+    grouped = logs.groupby(['cluster', 'date'])
+    for (cid, day), group in grouped:
+        if cid == -1:
+            continue
+        duration = group['timestamp'].max() - group['timestamp'].min()
+        if duration >= timedelta(minutes=60):
+            cluster_day_duration[cid, day] += duration
+
     return log_entries
 
