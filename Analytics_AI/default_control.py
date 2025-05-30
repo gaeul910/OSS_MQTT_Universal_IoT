@@ -40,6 +40,12 @@ class control:
         
         self.now_point=input("현재 좌표를 입력해주세용 : ")
 
+        request=open("test0.json","r")
+        #요청받는 값은 json형태이다
+        with request as f:
+         p=json.load(f)                
+         if isinstance(p,list):          
+              p=dict(p[0])
     def home_in(self):
         
         data=self.home_point.split()
