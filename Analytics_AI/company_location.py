@@ -81,5 +81,11 @@ def detect_initial_clusters(logs):
             }
 
     return cluster_store
+
+# -------------------- 클러스터 업데이트 --------------------
+def update_or_create_cluster(log, cluster_store):
+    lat, lon = log['lat'], log['lon']
+    date = log['timestamp'].date().isoformat()
+
     return log_entries
 
