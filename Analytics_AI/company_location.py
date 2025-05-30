@@ -67,5 +67,19 @@ def detect_initial_clusters(logs):
     for (cid, day), duration in cluster_day_duration.items():
         cluster_visit_days[cid].add(day.isoformat())
 
+    cluster_store = {}
+    for cid, days in cluster_visit_days.items():
+        #초기 방문일수로 필터링
+        if len(days) >= 10:
+            cluster_points = logs[logs['cluster'] == cid][['lat', 'lon']]
+            center = cluster_points.mean()
+            cluster_store[str(center['uid'])] = {
+                "lat": center['lat'],
+                "lon": center['lon'],
+                "visit_days": set(days),
+                "last_visit": max(days)
+            }
+
+    return cluster_store
     return log_entries
 
