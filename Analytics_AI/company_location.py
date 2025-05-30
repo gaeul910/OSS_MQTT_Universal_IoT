@@ -158,3 +158,14 @@ def update():
     else:
         cluster_store=res.text
 
+        update_or_create_cluster(row, cluster_store)
+
+    # 3. 60일 이상 미방문 클러스터 제거
+    reference_date = logs['timestamp'].max().date()
+    cluster_store = prune_old_clusters(cluster_store, reference_date)
+
+    
+    output=cluster_store_to_log_entries(cluster_store)
+    
+    #현욱이한테 요청해서 보내기
+    print(json.dumps(output,indent=2))
