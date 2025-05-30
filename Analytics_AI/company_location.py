@@ -147,3 +147,9 @@ def update():
     #한달 데이터를 리스트 안에 넣어준다.##########
     raw_logs = []
     raw_logs=res.text
+    logs = preprocess_logs(raw_logs)
+    data=[]
+    headers=[]
+    #현욱이한테 이벤트 좌표들 모아놓은거 있나 확인하기#######따로 확인하기 다른 코드가 있나
+    res = r.get("http://localhost:3000/location/fav/point", headers=headers, data=data)
+    # 1. 초기 클러스터 생성
