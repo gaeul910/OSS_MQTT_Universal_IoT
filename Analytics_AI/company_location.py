@@ -93,5 +93,12 @@ def update_or_create_cluster(log, cluster_store):
             info['last_visit'] = max(info['last_visit'], date)
             return
 
+    cluster_store[str(log['uid'])] = {
+        "lat": lat,
+        "lon": lon,
+        "visit_days": {date},
+        "last_visit": date
+    }
+
     return log_entries
 
