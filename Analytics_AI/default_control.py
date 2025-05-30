@@ -26,7 +26,7 @@ class control:
         #집의 좌표를 요청해서 받는다
 
 
-        request=open("test.json","r")
+        """request=open("test.json","r")
         #요청받는 값은 json형태이다
         with request as f:
             p=json.load(f)                
@@ -36,7 +36,10 @@ class control:
             self.now_uid=p["uid"]    
             now_point=p["coordness"]
             self.now_point=now_point.replace("POINT(","").replace(")","")
-    #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면
+    #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면"""
+        
+        self.now_point=input("현재 좌표를 입력해주세용 : ")
+
     def home_in(self):
         
         data=self.home_point.split()
