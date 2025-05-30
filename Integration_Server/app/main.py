@@ -162,7 +162,7 @@ def visits():
         ret = cursor.fetchone()
     except:
         return "Internel Server Error", 500
-    return str(ret["visit_times"])
+    return ret
 
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
