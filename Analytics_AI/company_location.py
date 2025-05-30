@@ -63,5 +63,9 @@ def detect_initial_clusters(logs):
         if duration >= timedelta(minutes=60):
             cluster_day_duration[cid, day] += duration
 
+    cluster_visit_days = defaultdict(set)
+    for (cid, day), duration in cluster_day_duration.items():
+        cluster_visit_days[cid].add(day.isoformat())
+
     return log_entries
 
