@@ -111,6 +111,15 @@ def prune_old_clusters(cluster_store, reference_date, max_gap_days=60):
 # -------------------- 로그 전처리 --------------------
 def preprocess_logs(raw_logs):
     parsed_data = []
+    for log in raw_logs:
+        lat, lon = parse_point(log['coordness'])
+        parsed_data.append({
+            "id":log['id'],
+            "timestamp": pd.to_datetime(log['time']),
+            "lat": lat,
+            "lon": lon,
+            "uid": log['uid']
+        })
     return pd.DataFrame(parsed_data)
     return log_entries
 
