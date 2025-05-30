@@ -148,7 +148,14 @@ def route():
             return "Success"
         except:
             return "DELETE unsuccessful"
-    
+
+@app.route("/event/visits", methods=['GET'])
+
+def visits():
+    try:
+        dict_req = request.get_json()
+        location_id = dict_req["location_id"]
+        lookup_days = dict_req["lookup_days"]
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
 def eventlogs():
