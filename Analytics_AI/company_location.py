@@ -36,8 +36,15 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
     c = 2 * np.arcsin(np.sqrt(a))
     return R * c * 1000  # meters
+
 def is_same_cluster(lat1, lon1, lat2, lon2, threshold=30):
     return haversine_distance(lat1, lon1, lat2, lon2) <= threshold
+
+# -------------------- 클러스터 초기화 (DBSCAN) --------------------
+def detect_initial_clusters(logs):
+    logs = logs.copy()
+    logs['timestamp'] = pd.to_datetime(logs['timestamp'])
+    logs = logs.sort_values(by='timestamp')
 
     return log_entries
 
