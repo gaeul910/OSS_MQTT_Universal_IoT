@@ -52,6 +52,12 @@ class control:
          if work_point:
             work_data= list(map(float, work_point.split()))
             now_data=list(map(float, self.now_point.split()))
+            if PR.range(work_data,now_data)<100:
+                self.event="특정 장소 도착"
+        #회사의 좌표가 있다면 요청해서 받는다
+
+        
+    
     def home_in(self):
         
         data=self.home_point.split()
