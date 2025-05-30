@@ -140,3 +140,10 @@ def cluster_store_to_log_entries(cluster_store):
         })
     return log_entries
 
+def update():
+    data=[]
+    headers=[]
+    res =r.get("http://localhost:3000/location/logs", headers=headers, data=data)
+    #한달 데이터를 리스트 안에 넣어준다.##########
+    raw_logs = []
+    raw_logs=res.text
