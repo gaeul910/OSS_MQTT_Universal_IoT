@@ -46,5 +46,9 @@ def detect_initial_clusters(logs):
     logs['timestamp'] = pd.to_datetime(logs['timestamp'])
     logs = logs.sort_values(by='timestamp')
 
+    coords = np.radians(logs[['lat', 'lon']].to_numpy())
+    kms_per_radian = 6371.0088
+    eps_km = 0.03  # 30m 이내
+    db = DBSCAN(eps=eps_km / kms_per_radian, min_samples=7, algorithm='ball_tree', metric='haversine')
     return log_entries
 
