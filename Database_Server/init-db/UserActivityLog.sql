@@ -1,7 +1,7 @@
-﻿CREATE TABLE `eventlog` (
+CREATE TABLE `eventlog` (
 	`id`	INT(11)	NOT NULL,
 	`location_id`	INT(11)	NOT NULL,
-	`log_id`	INT(11)	NOT NULL,
+	`time`	DATETIME	NOT NULL,
 	`about`	INT(11)	NULL
 );
 
