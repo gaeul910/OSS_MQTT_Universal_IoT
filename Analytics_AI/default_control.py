@@ -6,9 +6,11 @@ import json
 class control:
     def __init__(self):
         self.level=0
+        #나중에 리퀘스트로 받아야함
         self.home_point=""
         self.now_point=""
         self.now_uid=""
+        self.event=""
 
     def get (self):
         self.level=0
@@ -18,7 +20,7 @@ class control:
          p=json.load(f)                
          if isinstance(p,list):          
               p=dict(p[0])
-
+         self.now_uid=p["uid"]
          home_point=p["coordness"]
          self.home_point=home_point.replace("POINT(","").replace(")","")
         #집의 좌표를 요청해서 받는다
@@ -50,9 +52,12 @@ class control:
         now_point.append(float(data[0])) 
         now_point.append(float(data[1])) 
 
-        if PR.range(home_point,now_point)<2:
+        if PR.range(home_point,now_point)<500:
                  self.level=1
+                 return "곧 집에 들어옴"
         #현재 위치를 근거로 집 위치와 비교해서 곧 도착하는지 확인하기
+        else :
+            return "아직 아님"
     
         MS.swich(self.level,self.now_uid)
         print("집을 들어올때 디폴트")
@@ -69,8 +74,10 @@ class control:
         now_point=[]
         now_point.append(float(data[0])) 
         now_point.append(float(data[1])) 
-        if PR.range(home_point,now_point)>2:
+        print(PR.range(home_point,now_point))
+        if PR.range(home_point,now_point)>=500:
             self.level=0
+            return"집을 나감"
         #현재 위치를 근거로 집 위치와 비교해서 나갔는지 확인하기
 
         MS.swich(self.level,self.now_uid)
@@ -80,11 +87,5 @@ class control:
         self.get()
         if b==1:
             self.home_out()
-        elif b==0:
-            self.home_in()
-
-ct=control()
-ct.control_panel(1)
-
-
-#좌표가 제대로 나오는지 확인용 나중에 지워야함
+        else:
+            return"집을 안나감"
