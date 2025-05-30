@@ -100,5 +100,13 @@ def update_or_create_cluster(log, cluster_store):
         "last_visit": date
     }
 
+# -------------------- 클러스터 정리 --------------------
+def prune_old_clusters(cluster_store, reference_date, max_gap_days=60):
+    cutoff = reference_date - timedelta(days=max_gap_days)
+    return {
+        cid: info for cid, info in cluster_store.items()
+        if date.fromisoformat(info['last_visit']) >= cutoff
+    }
+
     return log_entries
 
