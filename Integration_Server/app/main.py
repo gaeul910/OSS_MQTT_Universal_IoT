@@ -110,6 +110,10 @@ def gen_id(table_name, id_name):
     except:
         return -1
         
+@app.route("/register", methods=['GET', 'POST'])
+
+def register():
+    root_search_res = user_search(0)
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
