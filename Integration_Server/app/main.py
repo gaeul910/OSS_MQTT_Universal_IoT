@@ -68,13 +68,14 @@ def gen_auth_code():
 
 def auth_user(session_token):
     try:
+        cursor.fetchall()
         delete_expired_session()
         query = "SELECT * FROM clients WHERE token = %s AND expire_time > NOW()"
         cursor.execute(query, (session_token, ))
-        session_dict = cursor.fetchall()
+        session_dict = cursor.fetchone()
         if not session_dict:
             return -2
-        return 1
+        return int(session_dict["uid"])
     except:
         return -1
     
