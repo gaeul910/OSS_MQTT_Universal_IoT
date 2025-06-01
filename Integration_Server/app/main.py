@@ -26,6 +26,15 @@ except:
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
+def register_user(uid, perm_level):
+    try:
+        query = "INSERT INTO users VALUES (%s, %s)"
+        uid = gen_id("users", "uid")
+        cursor.execute(query, (uid, perm_level, ))
+        return uid
+    except:
+        return -1
+    
 def auth_user(session_token):
     try:
         delete_expired_session()
