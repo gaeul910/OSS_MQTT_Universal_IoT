@@ -26,6 +26,15 @@ except:
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
+
+def delete_expired_session():
+    try:
+        query = "DELETE FROM clients WHERE expire_time < GETDATE()"
+        cursor.execute(query)
+        return 0
+    except:
+        return -1
+    
 def register_user(uid, perm_level):
     try:
         query = "INSERT INTO users VALUES (%s, %s)"
