@@ -2,9 +2,14 @@ from flask import Flask, render_template, request
 import configparser
 import pymysql
 import sys
+import socket
 import time
+import secrets
+import random
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 
 properties = configparser.ConfigParser()
 properties.read("./config.properties")
@@ -14,6 +19,15 @@ MYSQL_USERNAME = properties["CONNECTION"]["user"]
 MYSQL_PASSWORD = properties["CONNECTION"]["password"]
 MYSQL_DB = properties["CONNECTION"]["db"]
 
+services = {}
+services_domain = properties["SERVICES"]
+services_id = properties["SERVICES_ID"]
+
+# Parse services into dictionary
+for key in services_domain.keys():
+    services[key] = {"service_domain": services_domain[key], "service_id": services_id[key]}
+
+
 try:
     conn = pymysql.connect(host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USERNAME, passwd=MYSQL_PASSWORD, database=MYSQL_DB, autocommit=True)
 except:
@@ -21,6 +35,74 @@ except:
 
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
+
+
+def delete_expired_session():
+    try:
+        query = "DELETE FROM clients WHERE expire_time < GETDATE()"
+        cursor.execute(query)
+        return 0
+    except:
+        return -1
+    
+def register_user(uid, perm_level):
+    try:
+        query = "INSERT INTO users VALUES (%s, %s)"
+        uid = gen_id("users", "uid")
+        cursor.execute(query, (uid, perm_level, ))
+        return uid
+    except:
+        return -1
+    
+auth_code = ""
+expiry = 0
+    
+def gen_auth_code():
+    global auth_code, expiry
+    code_list = []
+    for i in range(8):
+        code_list.append(str(random.randint(0, 9)))
+    auth_code = "".join(code_list)
+    expiry = time.time() + 60  # 1 minute from now
+    return auth_code
+
+def auth_user(session_token):
+    try:
+        cursor.fetchall()
+        delete_expired_session()
+        query = "SELECT * FROM clients WHERE token = %s AND expire_time > NOW()"
+        cursor.execute(query, (session_token, ))
+        session_dict = cursor.fetchone()
+        if not session_dict:
+            return -2
+        return int(session_dict["uid"])
+    except:
+        return -1
+    
+def user_search(uid):
+    try:
+        query = "SELECT * FROM users WHERE uid = %s"
+        cursor.execute(query, (uid, ))
+        res = cursor.fetchall()
+        if not res:
+            return -2
+        return 1
+    except:
+        return -1
+    
+def gen_session(uid, client_type):
+    # Client Type 0 = Mobile 1 = Services 2 = Browser for root
+    try:
+        session_token = secrets.token_hex(32)
+        query = "INSERT INTO clients VALUES (%s, %s, %s, %s, %s)"
+        expire_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() + 3600))
+        client_id = gen_id("clients", "id")
+        
+        cursor.execute(query, (client_id, uid, session_token, client_type, expire_time, ))
+
+        return session_token
+    except:
+        return -1
 
 def gen_id(table_name, id_name):
     try:
@@ -38,7 +120,165 @@ def gen_id(table_name, id_name):
         return ret_id + 1
     except:
         return -1
+    
+def get_services_address():
+    address = {}
+    for key in services.keys():
+        try:
+            address[services[key]["service_id"]] = socket.gethostbyname(services[key]["service_domain"])
+        except:
+            address[key] = 0
+    
+    return address
+    
+@app.route("/root_auth", methods=['GET', 'POST'])
+
+def root_auth():
+    if request.method == 'GET':
+        root_exist = user_search(0)
+        if root_exist != 1:
+            return "Root user does not Exist, register first!", 403
+        return render_template("root_auth.html")
+    elif request.method == 'POST':
+        try:
+            root_exist = user_search(0)
+            if root_exist != 1:
+                return "Root user does not Exist, register first!", 403
+            
+            # auth root user
+            req_root_password = request.form["password"]
+            query = "SELECT * FROM rootuser"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            root_password = res[0]["password"]
+            if bcrypt.check_password_hash(root_password, req_root_password):
+                session_token = gen_session(0, 2)  # Generate session for root user (uid=0)
+                if session_token == -1:
+                    return "Session generation failed", 500
+                response = app.make_response("Authentication success")
+                response.set_cookie('session_token', session_token) # session cookie for root user
+                return response
+            else:
+                return "Password Invalid", 403
+        except:
+            return "There was Problem with a backend", 500
         
+@app.route("/service_connect", methods=['GET'])
+
+def service_connect():
+    services_address = get_services_address()
+    for key in services_address:
+        if request.remote_addr == services_address[key]:
+            return gen_session(10000 + int(key), 1)
+        else:
+            continue
+    return f"No Services found for ip address {request.remote_addr}", 403
+
+@app.route("/connect", methods=['GET', 'POST'])
+
+def connect():
+    if request.method == 'GET':
+        if user_search(0) != 1:
+            return "Root user does not Exist, register first!", 403
+        session_token = request.cookies["session_token"]
+        if auth_user(session_token) == 0:
+            # Access Granted
+            gen_auth_code()
+            return render_template("login.html", auth_code=auth_code)
+        else:
+            return "Forbidden", 403
+
+    elif request.method == 'POST':
+        req_dict = request.get_json()
+        req_uid = req_dict["uid"]
+        req_auth_code = req_dict["auth_code"]
+        if req_auth_code == auth_code:
+            return gen_session(req_uid, 1)
+        else:
+            return "Invalid code", 403
+        
+@app.route("/renew_session", methods=['GET', 'POST'])
+
+def renew_session():
+    try:
+        unintended_uid = [0]
+        if "Session-Token" not in request.headers:
+            return "Missing session token", 400
+        uid = auth_user(request.headers["Session-Token"])
+        if uid == -1:
+            return "Server Error", 500
+        elif uid == -2:
+            return "Invalid Session", 403
+        elif uid in unintended_uid:
+            return "Unintended uid", 400
+        new_session = gen_session(uid, 1)
+        if new_session == -1:
+            return "Failed to generate new session", 500
+        return new_session
+    except Exception as e:
+        print(f"Error in renew_session: {str(e)}")
+        return "Internal Server Error", 500
+        
+    
+        
+@app.route("/register", methods=['GET', 'POST'])
+
+def register():
+    root_search_res = user_search(0)
+    # User generation
+    if root_search_res != -2:
+        auth_stat = auth_user(0) # Tries root user authentication
+        if auth_stat == -2:
+            return "Invalid Session", 403 # Session Invalid
+        elif auth_stat == -1:
+            return "Internel Server Error", 500 # Server Error
+        # Registration Process
+        if auth_stat == 0:
+            if request.method == 'GET':
+                return render_template("register.html")
+
+            elif request.method == 'POST':
+                try:
+                    uid = gen_id("users", "uid")
+                    if uid == -1:
+                        return "UID generation Failed", 500
+                    permission_input = request.form["permission"]
+                    if permission_input == "Admin":
+                        permission = 0
+                    elif permission_input == "User":
+                        permission = 1
+                    else:
+                        return "Invalid Request", 400
+                    query = "INSERT INTO users VALUES (%s, %s)"
+                    cursor.execute(query, (uid, permission, ))
+                except:
+                    return "Internel Server Error", 500
+            return f"Process Successful, new uid is {uid}", 200
+    else:
+        if request.method == 'GET':
+            return render_template("root_register.html")
+        elif request.method == 'POST':
+            try:
+                uid = gen_id("users", "uid")
+                if uid != 0:
+                    return "Error, root user already exists", 500
+                permission = 0 # root user
+                if request.form["password"] != request.form["confirm_password"]:
+                    return "Check Password", 400
+                password = request.form["password"]
+                hash_pw = bcrypt.generate_password_hash(password)
+                try:
+                    query = "INSERT INTO users VALUES (%s, %s)"
+                    cursor.execute(query, (uid, permission, ))
+                    query = "INSERT INTO rootuser VALUES (%s, %s)"
+                    cursor.execute(query, (0, hash_pw, ))
+                except:
+                    return "Database Error", 500
+            except:
+                return "Internel Server Error", 500
+            return "Registration Sucessful", 200
+
+
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():

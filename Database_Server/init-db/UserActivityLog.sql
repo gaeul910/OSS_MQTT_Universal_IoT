@@ -15,7 +15,6 @@ CREATE TABLE `userfavroute` (
 
 CREATE TABLE `users` (
 	`uid`	INT(11)	NOT NULL,
-	`id2`	INT(11)	NOT NULL,
 	`permission`	INT(11)	NULL
 );
 
@@ -45,10 +44,15 @@ CREATE TABLE `usernotifications` (
 
 CREATE TABLE `clients` (
 	`id`	INT(11) NOT NULL	NOT NULL,
+	`uid`	INT(11)	NOT NULL,
 	`token`	VARCHAR(256)	NULL,
 	`type`	INT(11)	NULL,
-	`perms`	VARCHAR(255)	NULL,
-	`valid`	DATETIME	NULL
+	`expire_time`	DATETIME	NULL
+);
+
+CREATE TABLE `rootuser` (
+	`ID`	INT(11)	NOT NULL,
+	`password`	VARCHAR(255)	NULL
 );
 
 ALTER TABLE `eventlog` ADD CONSTRAINT `PK_EVENTLOG` PRIMARY KEY (
@@ -80,8 +84,12 @@ ALTER TABLE `clients` ADD CONSTRAINT `PK_CLIENTS` PRIMARY KEY (
 	`id`
 );
 
+ALTER TABLE `rootuser` ADD CONSTRAINT `PK_ROOTUSER` PRIMARY KEY (
+	`ID`
+);
+
 ALTER TABLE `eventlog` ADD CONSTRAINT `FK_userfavlocation_TO_eventlog_1` FOREIGN KEY (
-	`locationid`
+	`location_id`
 )
 REFERENCES `userfavlocation` (
 	`id`
