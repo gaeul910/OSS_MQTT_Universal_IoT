@@ -139,6 +139,13 @@ def register():
                     return "Check Password", 400
                 password = request.form["password"]
                 hash_pw = bcrypt.generate_password_hash(password)
+                try:
+                    query = "INSERT INTO users VALUES (%s, %s)"
+                    cursor.execute(query, (uid, permission, ))
+                    query = "INSERT INTO rootuser VALUES (%s, %s)"
+                    cursor.execute(query, (0, hash_pw, ))
+                except:
+                    return "Database Error", 500
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
