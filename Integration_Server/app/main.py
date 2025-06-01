@@ -126,6 +126,23 @@ def register():
             if request.method == 'GET':
                 return render_template("register.html")
 
+            elif request.method == 'POST':
+                try:
+                    uid = gen_id("users", "uid")
+                    if uid == -1:
+                        return "UID generation Failed", 500
+                    permission_input = request.form["permission"]
+                    if permission_input == "Admin":
+                        permission = 0
+                    elif permission_input == "User":
+                        permission = 1
+                    else:
+                        return "Invalid Request", 400
+                    query = "INSERT INTO users VALUES (%s, %s)"
+                    cursor.execute(query, (uid, permission, ))
+                except:
+                    return "Internel Server Error", 500
+            return f"Process Successful, new uid is {uid}", 200
     else:
         if request.method == 'GET':
             return render_template("root_register.html")
