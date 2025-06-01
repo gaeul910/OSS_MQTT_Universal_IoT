@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 import configparser
 import pymysql
 import sys
+import socket
 import time
 import secrets
 import random
@@ -17,6 +18,15 @@ MYSQL_PORT = int(properties["CONNECTION"]["port"])
 MYSQL_USERNAME = properties["CONNECTION"]["user"]
 MYSQL_PASSWORD = properties["CONNECTION"]["password"]
 MYSQL_DB = properties["CONNECTION"]["db"]
+
+services = {}
+services_domain = properties["SERVICES"]
+services_id = properties["SERVICES_ID"]
+
+# Parse services into dictionary
+for key in services_domain.keys():
+    services[key] = {"service_domain": services_domain[key], "service_id": services_id[key]}
+
 
 try:
     conn = pymysql.connect(host=MYSQL_HOST, port=MYSQL_PORT, user=MYSQL_USERNAME, passwd=MYSQL_PASSWORD, database=MYSQL_DB, autocommit=True)
