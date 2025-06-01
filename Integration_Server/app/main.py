@@ -129,6 +129,12 @@ def register():
     else:
         if request.method == 'GET':
             return render_template("root_register.html")
+        elif request.method == 'POST':
+            try:
+                uid = gen_id("users", "uid")
+                if uid != 0:
+                    return "Error, root user already exists", 500
+                permission = 0 # root user
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
