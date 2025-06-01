@@ -119,6 +119,11 @@ def root_auth():
         if root_exist != 1:
             return "Root user does not Exist, register first!", 403
         return render_template("root_auth.html")
+    elif request.method == 'POST':
+        try:
+            root_exist = user_search(0)
+            if root_exist != 1:
+                return "Root user does not Exist, register first!", 403
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
