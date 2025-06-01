@@ -144,9 +144,9 @@ def root_auth():
             return "There was Problem with a backend", 500
         
 
-@app.route("/login", methods=['GET', 'POST'])
+@app.route("/connect", methods=['GET', 'POST'])
 
-def login():
+def connect():
     if request.method == 'GET':
         if user_search(0) != 1:
             return "Root user does not Exist, register first!", 403
