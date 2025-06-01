@@ -114,6 +114,18 @@ def gen_id(table_name, id_name):
 
 def register():
     root_search_res = user_search(0)
+    # User generation
+    if root_search_res != -2:
+        auth_stat = auth_user(0) # Tries root user authentication
+        if auth_stat == -2:
+            return "Invalid Session", 403 # Session Invalid
+        elif auth_stat == -1:
+            return "Internel Server Error", 500 # Server Error
+        # Registration Process
+        if auth_stat == 1:
+            if request.method == 'GET':
+                return render_template("register.html")
+
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
