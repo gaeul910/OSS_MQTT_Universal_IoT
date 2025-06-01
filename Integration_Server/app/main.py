@@ -26,6 +26,17 @@ except:
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
+def user_search(uid):
+    try:
+        query = "SELECT * FROM users WHERE uid = %s"
+        cursor.execute(query, (uid, ))
+        res = cursor.fetchall()
+        if not res:
+            return -2
+        return 1
+    except:
+        return -1
+    
 def gen_id(table_name, id_name):
     try:
         allowed_table_name = ["clients", "eventlog", "locationlog", "userfavlocation", "userfavroute", "usernotifications", "users"]
