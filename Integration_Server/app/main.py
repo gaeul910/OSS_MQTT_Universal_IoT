@@ -197,6 +197,30 @@ def connect():
         else:
             return "Invalid code", 403
         
+@app.route("/renew_session", methods=['GET', 'POST'])
+
+def renew_session():
+    try:
+        unintended_uid = [0]
+        if "Session-Token" not in request.headers:
+            return "Missing session token", 400
+        uid = auth_user(request.headers["Session-Token"])
+        if uid == -1:
+            return "Server Error", 500
+        elif uid == -2:
+            return "Invalid Session", 403
+        elif uid in unintended_uid:
+            return "Unintended uid", 400
+        new_session = gen_session(uid, 1)
+        if new_session == -1:
+            return "Failed to generate new session", 500
+        return new_session
+    except Exception as e:
+        print(f"Error in renew_session: {str(e)}")
+        return "Internal Server Error", 500
+        
+    
+        
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
