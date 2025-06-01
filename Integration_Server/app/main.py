@@ -3,8 +3,12 @@ import configparser
 import pymysql
 import sys
 import time
+import secrets
+import random
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
+bcrypt = Bcrypt(app)
 
 properties = configparser.ConfigParser()
 properties.read("./config.properties")
