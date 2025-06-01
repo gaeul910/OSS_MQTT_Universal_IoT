@@ -138,6 +138,10 @@ def root_auth():
                 response = app.make_response("Authentication success")
                 response.set_cookie('session_token', session_token) # session cookie for root user
                 return response
+            else:
+                return "Password Invalid", 403
+        except:
+            return "There was Problem with a backend", 500
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
