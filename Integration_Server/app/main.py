@@ -194,13 +194,8 @@ def connect():
         req_auth_code = req_dict["auth_code"]
         if req_auth_code == auth_code:
             return gen_session(req_uid, 1)
-            req_auth_code = req_dict["auth_code"]
-            if req_auth_code == auth_code:
-                return gen_session(req_uid)
-            else:
-                return "Invalid code", 403
         else:
-            return "Unauthorized", 400
+            return "Invalid code", 403
         
 @app.route("/register", methods=['GET', 'POST'])
 
