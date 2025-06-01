@@ -126,6 +126,9 @@ def register():
             if request.method == 'GET':
                 return render_template("register.html")
 
+    else:
+        if request.method == 'GET':
+            return render_template("root_register.html")
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
