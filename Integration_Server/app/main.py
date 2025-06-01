@@ -26,6 +26,18 @@ except:
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
+def auth_user(session_token):
+    try:
+        delete_expired_session()
+        query = "SELECT * FROM clients WHERE token = %s AND expire_time > NOW()"
+        cursor.execute(query, (session_token, ))
+        session_dict = cursor.fetchall()
+        if not session_dict:
+            return -2
+        return 1
+    except:
+        return -1
+    
 def user_search(uid):
     try:
         query = "SELECT * FROM users WHERE uid = %s"
