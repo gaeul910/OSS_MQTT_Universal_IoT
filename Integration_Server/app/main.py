@@ -79,6 +79,20 @@ def user_search(uid):
     except:
         return -1
     
+def gen_session(uid, client_type):
+    # Client Type 0 = Mobile 1 = Services 2 = Browser for root
+    try:
+        session_token = secrets.token_hex(32)
+        query = "INSERT INTO clients VALUES (%s, %s, %s, %s, %s)"
+        expire_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time() + 3600))
+        client_id = gen_id("clients", "id")
+        
+        cursor.execute(query, (client_id, uid, session_token, client_type, expire_time, ))
+
+        return session_token
+    except:
+        return -1
+
 def gen_id(table_name, id_name):
     try:
         allowed_table_name = ["clients", "eventlog", "locationlog", "userfavlocation", "userfavroute", "usernotifications", "users"]
