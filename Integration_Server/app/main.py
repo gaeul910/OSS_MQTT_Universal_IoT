@@ -110,6 +110,15 @@ def gen_id(table_name, id_name):
     except:
         return -1
         
+    
+@app.route("/root_auth", methods=['GET', 'POST'])
+
+def root_auth():
+    if request.method == 'GET':
+        root_exist = user_search(0)
+        if root_exist != 1:
+            return "Root user does not Exist, register first!", 403
+        return render_template("root_auth.html")
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
