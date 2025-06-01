@@ -150,6 +150,13 @@ def login():
     if request.method == 'GET':
         if user_search(0) != 1:
             return "Root user does not Exist, register first!", 403
+        session_token = request.cookies["session_token"]
+        if auth_user(session_token) == 1:
+            # Access Granted
+            gen_auth_code()
+            return render_template("login.html", auth_code=auth_code)
+        else:
+            return "Forbidden", 403
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
