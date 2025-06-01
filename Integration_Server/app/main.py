@@ -120,7 +120,16 @@ def gen_id(table_name, id_name):
         return ret_id + 1
     except:
         return -1
-        
+    
+def get_services_address():
+    address = {}
+    for key in services.keys():
+        try:
+            address[services[key]["service_id"]] = socket.gethostbyname(services[key]["service_domain"])
+        except:
+            address[key] = 0
+    
+    return address
     
 @app.route("/root_auth", methods=['GET', 'POST'])
 
