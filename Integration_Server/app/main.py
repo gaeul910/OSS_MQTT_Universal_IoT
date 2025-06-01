@@ -159,11 +159,11 @@ def connect():
             return "Forbidden", 403
 
     elif request.method == 'POST':
-        if user_search(0) != 1:
-            return "Root user does not Exist, register first!", 403
-        if auth_user(0) == 1:
-            req_dict = request.get_json()
-            req_uid = req_dict["uid"]
+        req_dict = request.get_json()
+        req_uid = req_dict["uid"]
+        req_auth_code = req_dict["auth_code"]
+        if req_auth_code == auth_code:
+            return gen_session(req_uid, 1)
             req_auth_code = req_dict["auth_code"]
             if req_auth_code == auth_code:
                 return gen_session(req_uid)
