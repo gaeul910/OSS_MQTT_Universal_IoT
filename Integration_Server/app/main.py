@@ -135,6 +135,10 @@ def register():
                 if uid != 0:
                     return "Error, root user already exists", 500
                 permission = 0 # root user
+                if request.form["password"] != request.form["confirm_password"]:
+                    return "Check Password", 400
+                password = request.form["password"]
+                hash_pw = bcrypt.generate_password_hash(password)
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
