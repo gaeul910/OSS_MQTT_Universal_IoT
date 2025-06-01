@@ -142,6 +142,14 @@ def root_auth():
                 return "Password Invalid", 403
         except:
             return "There was Problem with a backend", 500
+        
+
+@app.route("/login", methods=['GET', 'POST'])
+
+def login():
+    if request.method == 'GET':
+        if user_search(0) != 1:
+            return "Root user does not Exist, register first!", 403
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
