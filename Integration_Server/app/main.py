@@ -44,6 +44,18 @@ def register_user(uid, perm_level):
     except:
         return -1
     
+auth_code = ""
+expiry = 0
+    
+def gen_auth_code():
+    global auth_code, expiry
+    code_list = []
+    for i in range(8):
+        code_list.append(str(random.randint(0, 9)))
+    auth_code = "".join(code_list)
+    expiry = time.time() + 60  # 1 minute from now
+    return auth_code
+
 def auth_user(session_token):
     try:
         delete_expired_session()
