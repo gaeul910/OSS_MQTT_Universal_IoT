@@ -157,6 +157,21 @@ def login():
             return render_template("login.html", auth_code=auth_code)
         else:
             return "Forbidden", 403
+
+    elif request.method == 'POST':
+        if user_search(0) != 1:
+            return "Root user does not Exist, register first!", 403
+        if auth_user(0) == 1:
+            req_dict = request.get_json()
+            req_uid = req_dict["uid"]
+            req_auth_code = req_dict["auth_code"]
+            if req_auth_code == auth_code:
+                return gen_session(req_uid)
+            else:
+                return "Invalid code", 403
+        else:
+            return "Unauthorized", 400
+        
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
