@@ -181,7 +181,7 @@ def connect():
         if user_search(0) != 1:
             return "Root user does not Exist, register first!", 403
         session_token = request.cookies["session_token"]
-        if auth_user(session_token) == 1:
+        if auth_user(session_token) == 0:
             # Access Granted
             gen_auth_code()
             return render_template("login.html", auth_code=auth_code)
@@ -214,7 +214,7 @@ def register():
         elif auth_stat == -1:
             return "Internel Server Error", 500 # Server Error
         # Registration Process
-        if auth_stat == 1:
+        if auth_stat == 0:
             if request.method == 'GET':
                 return render_template("register.html")
 
