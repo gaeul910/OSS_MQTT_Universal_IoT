@@ -124,6 +124,13 @@ def root_auth():
             root_exist = user_search(0)
             if root_exist != 1:
                 return "Root user does not Exist, register first!", 403
+            
+            # auth root user
+            req_root_password = request.form["password"]
+            query = "SELECT * FROM rootuser"
+            cursor.execute(query)
+            res = cursor.fetchall()
+            root_password = res[0]["password"]
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
