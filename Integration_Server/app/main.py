@@ -163,6 +163,16 @@ def root_auth():
         except:
             return "There was Problem with a backend", 500
         
+@app.route("/service_connect", methods=['GET'])
+
+def service_connect():
+    services_address = get_services_address()
+    for key in services_address:
+        if request.remote_addr == services_address[key]:
+            return gen_session(10000 + int(key), 1)
+        else:
+            continue
+    return f"No Services found for ip address {request.remote_addr}", 403
 
 @app.route("/connect", methods=['GET', 'POST'])
 
