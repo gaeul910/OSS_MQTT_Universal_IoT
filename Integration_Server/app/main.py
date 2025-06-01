@@ -131,6 +131,13 @@ def root_auth():
             cursor.execute(query)
             res = cursor.fetchall()
             root_password = res[0]["password"]
+            if bcrypt.check_password_hash(root_password, req_root_password):
+                session_token = gen_session(0, 2)  # Generate session for root user (uid=0)
+                if session_token == -1:
+                    return "Session generation failed", 500
+                response = app.make_response("Authentication success")
+                response.set_cookie('session_token', session_token) # session cookie for root user
+                return response
 @app.route("/register", methods=['GET', 'POST'])
 
 def register():
