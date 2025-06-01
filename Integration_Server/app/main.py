@@ -146,6 +146,11 @@ def register():
                     cursor.execute(query, (0, hash_pw, ))
                 except:
                     return "Database Error", 500
+            except:
+                return "Internel Server Error", 500
+            return "Registration Sucessful", 200
+
+
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
