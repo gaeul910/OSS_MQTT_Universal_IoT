@@ -253,9 +253,9 @@ def register():
                         return "UID generation Failed", 500
                     permission_input = request.form["permission"]
                     if permission_input == "Admin":
-                        permission = 0
-                    elif permission_input == "User":
                         permission = 1
+                    elif permission_input == "User":
+                        permission = 2
                     else:
                         return "Invalid Request", 400
                     query = "INSERT INTO users VALUES (%s, %s)"
