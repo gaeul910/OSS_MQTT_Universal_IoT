@@ -57,3 +57,20 @@ class UserTracker:
                 MS.switch(0,self.user.now_uid)
                 break
 
+    def monitor_while_out(self):
+        print("밖에 있음 ...")
+
+        while self.status == "out":
+            time.sleep(3)
+            self.user.get()
+
+            if self.user.event == "특정 장소 도착":#if_send는 요청이 비어있을때만 보내는 함수이다
+                RR.route_exist_send(self.user.route)#없을때는 false를 반환하므로
+                self.event = WE.exit(self.user.now_uid)
+                print(f"특정 장소 도착 이벤트 발생: {self.event}")
+                return
+
+            if self.user.home_in() == '곧 집에 들어옴':
+                self.prepare_home_entry()
+                return
+
