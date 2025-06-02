@@ -480,6 +480,11 @@ def route():
     
     elif(request.method == 'POST'):
         try:
+            # Permission  Validation
+            if check_permission(session_uid, post_permission) in [0]:
+                return "Permission Denied", 403
+            
+            # Process Request
             get_dict = request.get_json()
             route = get_dict["route"]
             startlocation_id = get_dict["startlocation_id"]
