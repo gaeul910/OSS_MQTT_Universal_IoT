@@ -290,6 +290,10 @@ def register():
 @app.route("/users", methods=['GET'])
 
 def users():
+    # permission list
+    get_permission = [2, 2, 2, 2]
+    
+    # auth feature
     try:
         auth_stat = auth_user(request.headers["Session-Token"])
     except:
@@ -298,8 +302,10 @@ def users():
         return "Authentication Server Error", 500
     elif auth_stat == -2:
         return "Invalid Session", 403
+    session_uid = auth_stat
+    # get users info
     try:
-        cursor.fetchall() # Prevents Unintended Value
+        # no permission validation because all session have access to this backend
         query = "SELECT uid FROM users WHERE uid <> 0"
         cursor.execute(query)
         ret = cursor.fetchall()
