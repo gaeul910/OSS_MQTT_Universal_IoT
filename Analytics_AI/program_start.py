@@ -21,3 +21,10 @@ def save_last_run_date():
     with open(LAST_RUN_FILE, "w") as f:
         json.dump({"last_run": datetime.now().isoformat()}, f)
 
+def should_update():
+    last_run = get_last_run_date()
+    if not last_run:
+        return True 
+    next_due = last_run + timedelta(days=INTERVAL_DAYS)
+    return datetime.now() >= next_due
+
