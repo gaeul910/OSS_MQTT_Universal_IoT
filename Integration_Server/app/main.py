@@ -368,6 +368,22 @@ def logs():
 @app.route("/location/fav/point", methods=['GET', 'POST', 'DELETE'])
 
 def point():
+    # permission
+    get_permission = [0, 1, 1, 2]
+    post_permission = [0, 0, 0, 2]
+    delete_permission = [0, 1, 1, 2]
+
+    
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if(request.method == 'GET'):
         dict_req = request.get_json()
         uid = dict_req["uid"]
