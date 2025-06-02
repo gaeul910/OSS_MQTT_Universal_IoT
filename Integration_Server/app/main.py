@@ -333,12 +333,11 @@ def point():
     if(request.method == 'GET'):
         dict_req = request.get_json()
         uid = dict_req["uid"]
-        point_id = dict_req["point_id"]
-        query = "SELECT id, uid, alias, ST_AsText(coordinate) as coordinate, status FROM userfavlocation WHERE uid = %s AND id = %s"
-        cursor.execute(query, (uid, point_id))
+        query = "SELECT id, uid, alias, ST_AsText(coordinate) as coordinate, status FROM userfavlocation WHERE uid = %s"
+        cursor.execute(query, (uid, ))
         ret = cursor.fetchall()
         if not ret:
-            return "No data found for uid: {} after point_id: {}".format(uid, point_id)
+            return "No data found for uid: {}".format(uid)
         return ret
     
     elif(request.method == 'POST'):
