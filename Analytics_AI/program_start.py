@@ -6,6 +6,7 @@ import json
 import os
 from datetime import datetime, timedelta
 import set_of_request as RR
+import company_location as CL
 
 LAST_RUN_FILE = "last_run.json"
 INTERVAL_DAYS = 30  
@@ -27,4 +28,8 @@ def should_update():
         return True 
     next_due = last_run + timedelta(days=INTERVAL_DAYS)
     return datetime.now() >= next_due
+
+def update_clusters():
+    CL.update()
+    save_last_run_date()
 
