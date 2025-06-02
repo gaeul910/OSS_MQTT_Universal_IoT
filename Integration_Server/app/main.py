@@ -676,26 +676,40 @@ def getnoti():
 @app.route("/notification/postnoti", methods=['POST'])
 
 def postnoti():
-        uid = request.headers["uid"]
-        dict_req = request.get_json()
-        content = dict_req["content"]
-        issue = dict_req["time"]
-        about = dict_req["about"]
-        uid = int(uid)
-        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
-        getdict = cursor.fetchone()
-        notification_id = getdict['highest_id']
-        if not notification_id:
-            notification_id = 0
-        notification_id += 1
+    post_permission = [0, 2, 0, 2]
 
-        try:
-            cursor.execute(query, (notification_id, uid, content, issue, 0, about))
-        except:
-            return "Error"
-        conn.commit()
-        return "Success"
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+    if check_permission(session_uid, post_permission) in [0]:
+            return "Permission Denied", 403
+    dict_req = request.get_json()
+    uid = dict_req["uid"] # changes
+    content = dict_req["content"]
+    issue = dict_req["time"]
+    about = dict_req["about"]
+    uid = int(uid)
+    query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
+    cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
+    getdict = cursor.fetchone()
+    notification_id = getdict['highest_id']
+    if not notification_id:
+        notification_id = 0
+    notification_id += 1
+
+    try:
+        cursor.execute(query, (notification_id, uid, content, issue, 0, about))
+    except:
+        return "Error"
+    conn.commit()
+    return "Success"
 
 @app.route("/notification/sync", methods=['GET', 'POST'])
 
