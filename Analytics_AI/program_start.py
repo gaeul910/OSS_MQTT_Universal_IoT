@@ -74,3 +74,12 @@ class UserTracker:
                 self.prepare_home_entry()
                 return
 
+    def monitor_until_home(self):
+        print("퇴근길 아님")
+        while self.status == "out":
+            time.sleep(3)
+            self.user.get()
+            if self.user.home_in() == "곧 집에 들어옴":
+                self.prepare_home_entry()
+                return
+
