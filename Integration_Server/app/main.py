@@ -503,9 +503,26 @@ def route():
         try:
             get_dict = request.get_json()
             route_id = get_dict["route_id"]
-            uid = get_dict["uid"]
-            query = "DELETE FROM userfavroute WHERE id = %s AND uid = %s"
-            ret = cursor.execute(query, (route_id, uid, ))
+        except:
+            return "Error while processing request", 500
+
+        try:
+            query = "SELECT startlocation_id FROM userfavroute WHERE id = %s"
+            cursor.execute(query, (route_id, ))
+            ret = cursor.fetchone()
+            location_id = ret["startlocation_id"]
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (location_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from route_id for auth", 500
+        
+        if check_permission(session_uid, delete_permission) in [0, 1] and uid != session_uid:
+                return "Permission Denied", 403
+        try:
+            query = "DELETE FROM userfavroute WHERE id = %s"
+            ret = cursor.execute(query, (route_id, ))
             return "Success"
         except:
             return "DELETE unsuccessful"
