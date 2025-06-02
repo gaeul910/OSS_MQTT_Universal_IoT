@@ -278,6 +278,25 @@ def register():
                 return "Internel Server Error", 500
             return "Registration Sucessful", 200
 
+@app.route("/users", methods=['GET'])
+
+def users():
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    try:
+        cursor.fetchall() # Prevents Unintended Value
+        query = "SELECT uid FROM users WHERE uid <> 0"
+        cursor.execute(query)
+        ret = cursor.fetchall()
+    except:
+        return "Internel Server Error", 500
+    return ret
 
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
@@ -314,12 +333,11 @@ def point():
     if(request.method == 'GET'):
         dict_req = request.get_json()
         uid = dict_req["uid"]
-        point_id = dict_req["point_id"]
-        query = "SELECT id, uid, alias, ST_AsText(coordinate) as coordinate, status FROM userfavlocation WHERE uid = %s AND id = %s"
-        cursor.execute(query, (uid, point_id))
+        query = "SELECT id, uid, alias, ST_AsText(coordinate) as coordinate, status FROM userfavlocation WHERE uid = %s"
+        cursor.execute(query, (uid, ))
         ret = cursor.fetchall()
         if not ret:
-            return "No data found for uid: {} after point_id: {}".format(uid, point_id)
+            return "No data found for uid: {}".format(uid)
         return ret
     
     elif(request.method == 'POST'):
