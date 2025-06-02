@@ -89,3 +89,22 @@ class UserTracker:
         self.status = "in"
         self.event = None
 
+    def run(self):
+        while True:
+            self.wait_until_leave_home()
+            self.monitor_while_out()
+
+            if self.event == "퇴근길맞음":
+                print("퇴근길로 판단됨.")
+                self.status = "in"
+                self.event = None
+            elif self.event == "퇴근길아님":
+                self.user.not_work_exit = True
+                self.monitor_until_home()
+                self.user.not_work_exit = False
+
+            print("루프 성공! 다시 감시 시작...\n")
+
+if __name__ == "__main__":
+    tracker = UserTracker()
+    tracker.run()
