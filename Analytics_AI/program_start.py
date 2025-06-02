@@ -33,3 +33,9 @@ def update_clusters():
     CL.update()
     save_last_run_date()
 
+class UserTracker:
+    def __init__(self):
+        self.user = DC.control()
+        self.status = "in"  # 집에 있는 상태로 시작
+        self.event = None
+
