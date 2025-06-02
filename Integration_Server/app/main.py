@@ -387,6 +387,9 @@ def point():
     if(request.method == 'GET'):
         dict_req = request.get_json()
         uid = dict_req["uid"]
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
         query = "SELECT id, uid, alias, ST_AsText(coordinate) as coordinate, status FROM userfavlocation WHERE uid = %s"
         cursor.execute(query, (uid, ))
         ret = cursor.fetchall()
@@ -394,10 +397,14 @@ def point():
             return "No data found for uid: {}".format(uid)
         return ret
     
+    # This middleware is usually used by services
     elif(request.method == 'POST'):
         try:
             get_dict = request.get_json()
+            # Get uid by request
             uid = get_dict["uid"]
+            if check_permission(session_uid, post_permission) in [0]:
+                return "Permission Denied", 403
             coordinate = get_dict["coordinate"]
             alias = get_dict["alias"]
             status = get_dict["status"]
@@ -414,7 +421,9 @@ def point():
         try:
             get_dict = request.get_json()
             point_id = get_dict["point_id"]
-            uid = get_dict["uid"]
+            uid = get_dict["uid"] # point_id owner uid must be validated before removing this from request
+            if check_permission(session_uid, delete_permission) in [0, 1] and uid != session_uid:
+                return "Permission Denied", 403
             query = "DELETE FROM userfavlocation WHERE id = %s AND uid = %s"
             ret = cursor.execute(query, (point_id, ))
         except:
