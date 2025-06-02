@@ -737,13 +737,29 @@ def sync():
         except:
             return f"Error: {ret}"
         return ret
+
+    # POST
     elif request.method == 'POST':
+        # Load Request
         try:
             req_dict = request.get_json()
             req_notification_id = req_dict["notification_id"]
         except:
             return "Required data not in request", 400
         
+        # Permission Validation
+        try:
+            query = "SELECT uid FROM usernotifications WHERE id = %s"
+            cursor.execute(query, (req_notification_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from notification_id for auth", 500
+        
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        
+        # Process
         try:
             query = "UPDATE usernotifications SET stat = %s WHERE id = %s"
             cursor.execute(query, (1, req_notification_id, ))
