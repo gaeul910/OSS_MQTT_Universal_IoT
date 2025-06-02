@@ -623,11 +623,27 @@ def eventlogs():
         try:
             get_dict = request.get_json()
             event_id = get_dict["event_id"]
+        except:
+            return "Error while processing request", 500
+        try:
+            query = "SELECT location_id FROM eventlog WHERE id = %s"
+            cursor.execute(query, (event_id, ))
+            ret = cursor.fetchone()
+            location_id = ret["location_id"]
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (location_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from event_id for auth", 500
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        try:
             query = "DELETE FROM eventlog WHERE id = %s"
             ret = cursor.execute(query, (event_id, ))
             return "Success"
         except:
-            return "DELETE unsuccessful"
+            return "Error while interacting with database", 500
 
 @app.route("/notification/getnoti", methods=['GET'])
 
