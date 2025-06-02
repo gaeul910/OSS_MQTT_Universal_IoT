@@ -648,6 +648,19 @@ def eventlogs():
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
+    get_permission = [0, 1, 1, 2]
+
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+
     notification_id = request.headers["id"]
     notification_id = int(notification_id)
     try:
