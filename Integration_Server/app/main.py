@@ -481,20 +481,35 @@ def postnoti():
         conn.commit()
         return "Success"
 
-@app.route("/notification/sync", methods=['GET'])
+@app.route("/notification/sync", methods=['GET', 'POST'])
 
 def sync():
-    uid = request.headers["uid"]
-    uid = int(uid)
-    try:
-        cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
+    if request.method == 'GET':
+        uid = request.headers["uid"]
+        uid = int(uid)
+        try:
+            cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
 
-        ret = cursor.fetchall()
-        if not ret:
-            return "No data to sync"
-    except:
-        return f"Error: {ret}"
-    return ret
+            ret = cursor.fetchall()
+            if not ret:
+                return "No data to sync"
+        except:
+            return f"Error: {ret}"
+        return ret
+    elif request.method == 'POST':
+        try:
+            req_dict = request.get_json()
+            req_notification_id = req_dict["notification_id"]
+        except:
+            return "Required data not in request", 400
+        
+        try:
+            query = "UPDATE usernotifications SET stat = %s WHERE id = %s"
+            cursor.execute(query, (1, req_notification_id, ))
+            return "OK", 200
+        except:
+            return "Internel Server Error", 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)
