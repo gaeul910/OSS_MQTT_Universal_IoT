@@ -588,16 +588,33 @@ def eventlogs():
         return ret
     
     elif(request.method == 'POST'):
+        # request process
         try:
             get_dict = request.get_json()
-            log_id = get_dict["log_id"]
-            event_id = get_dict["location_id"]
+            issued = get_dict["time"]
+            location_id = get_dict["location_id"]
             about = get_dict["about"]
             event_id = gen_id("eventlog", "id")
             if event_id == -1:
                 return "POST unsuccessful, Error while id generation"
+        except:
+            return "Error while processing request", 500
+        # get uid for auth
+        try:
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (location_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from location_id for auth", 500
+        
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        
+        try:
             query = "INSERT INTO eventlog VALUES (%s, %s, %s, %s)"
-            ret = cursor.execute(query, (event_id, event_id, log_id, about, ))
+            ret = cursor.execute(query, (event_id, location_id, issued, about, ))
         except:
             return f"POST unsuccessful, {ret}"
         return "Success"
