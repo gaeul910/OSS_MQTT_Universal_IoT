@@ -66,9 +66,18 @@ def gen_auth_code():
     expiry = time.time() + 60  # 1 minute from now
     return auth_code
 
+def check_permission(uid, perms_list):
+    try:
+        query = "SELECT permission FROM users WHERE uid = %s"
+        cursor.execute(query, (uid, ))
+        ret = cursor.fetchone()
+        permission = ret["permission"]
+        return perms_list[permission]
+    except:
+        return -1
+
 def auth_user(session_token):
     try:
-        cursor.fetchall()
         delete_expired_session()
         query = "SELECT * FROM clients WHERE token = %s AND expire_time > NOW()"
         cursor.execute(query, (session_token, ))
