@@ -332,14 +332,20 @@ def logs():
         return "Invalid Session", 403
     session_uid = auth_stat
     if(request.method == 'GET'):
-        dict_req = request.get_json()
-        uid = dict_req["uid"]
-        location_id = dict_req["location_id"]
-        query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id = %s"
-        cursor.execute(query, (uid, location_id))
-        ret = cursor.fetchall()
-        if not ret:
-            return "No data found for uid: {} after location_id: {}".format(uid, location_id)
+        try:
+            dict_req = request.get_json()
+            uid = dict_req["uid"]
+            # Permission Validation
+            if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+                return "Permission Denied", 403
+            location_id = dict_req["location_id"]
+            query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id >= %s"
+            cursor.execute(query, (uid, location_id))
+            ret = cursor.fetchall()
+            if not ret:
+                return "No data found for uid: {} after location_id: {}".format(uid, location_id)
+        except:
+            return "Internel Server Error", 500
         return ret
         
     elif(request.method == 'POST'):
