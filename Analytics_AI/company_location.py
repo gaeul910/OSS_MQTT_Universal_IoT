@@ -1,0 +1,179 @@
+import pandas as pd
+from datetime import timedelta, datetime,date
+from sklearn.cluster import DBSCAN
+import numpy as np
+from collections import defaultdict
+import json
+import uuid
+import random
+import requests as r
+
+#처음 받은 데이터를 계산하기 쉽게 나누는 중
+def cluster_to_log_entries(cluster_store):
+    log_entries = []
+    for i, (cid, info) in enumerate(cluster_store.items(), start=1):
+        lat = round(info['lat'], 6)
+        lon = round(info['lon'], 6)
+        latest_date = datetime.fromisoformat(info['last_visit'])
+        log_entries.append({
+            "id": info.get("id", i), 
+            "coordness": f"POINT({lon:.6f} {lat:.6f})",
+            "time": latest_date.isoformat() + "Z",
+            "uid": info.get("uid", str(uuid.uuid4())), 
+        })
+    return log_entries
+
+# -------------------- 유틸리티 함수 --------------------
+def parse_point(coordness):
+    lon, lat = coordness.replace("POINT(", "").replace(")", "").split()
+    return float(lat), float(lon)
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    R = 6371.0088  # Earth radius in km
+    lat1, lon1, lat2, lon2 = map(np.radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
+    c = 2 * np.arcsin(np.sqrt(a))
+    return R * c * 1000  # meters
+
+def is_same_cluster(lat1, lon1, lat2, lon2, threshold=30):
+    return haversine_distance(lat1, lon1, lat2, lon2) <= threshold
+
+# -------------------- 클러스터 초기화 (DBSCAN) --------------------
+def detect_initial_clusters(logs):
+    logs = logs.copy()
+    logs['timestamp'] = pd.to_datetime(logs['timestamp'])
+    logs = logs.sort_values(by='timestamp')
+
+    coords = np.radians(logs[['lat', 'lon']].to_numpy())
+    kms_per_radian = 6371.0088
+    eps_km = 0.03  # 30m 이내
+    db = DBSCAN(eps=eps_km / kms_per_radian, min_samples=7, algorithm='ball_tree', metric='haversine')
+    labels = db.fit_predict(coords)
+    logs['cluster'] = labels
+    logs['date'] = logs['timestamp'].dt.date
+
+    cluster_day_duration = defaultdict(timedelta)
+    grouped = logs.groupby(['cluster', 'date'])
+    for (cid, day), group in grouped:
+        if cid == -1:
+            continue
+        duration = group['timestamp'].max() - group['timestamp'].min()
+        if duration >= timedelta(minutes=60):
+            cluster_day_duration[cid, day] += duration
+
+    cluster_visit_days = defaultdict(set)
+    for (cid, day), duration in cluster_day_duration.items():
+        cluster_visit_days[cid].add(day.isoformat())
+
+    cluster_store = {}
+    for cid, days in cluster_visit_days.items():
+        #초기 방문일수로 필터링
+        if len(days) >= 10:
+            cluster_points = logs[logs['cluster'] == cid][['lat', 'lon']]
+            center = cluster_points.mean()
+            cluster_store[str(center['uid'])] = {
+                "lat": center['lat'],
+                "lon": center['lon'],
+                "visit_days": set(days),
+                "last_visit": max(days)
+            }
+
+    return cluster_store
+
+# -------------------- 클러스터 업데이트 --------------------
+def update_or_create_cluster(log, cluster_store):
+    lat, lon = log['lat'], log['lon']
+    date = log['timestamp'].date().isoformat()
+
+    for cid, info in cluster_store.items():
+        if is_same_cluster(lat, lon, info['lat'], info['lon']):
+            info['visit_days'].add(date)
+            info['last_visit'] = max(info['last_visit'], date)
+            return
+
+    cluster_store[str(log['uid'])] = {
+        "lat": lat,
+        "lon": lon,
+        "visit_days": {date},
+        "last_visit": date
+    }
+
+# -------------------- 클러스터 정리 --------------------
+def prune_old_clusters(cluster_store, reference_date, max_gap_days=60):
+    cutoff = reference_date - timedelta(days=max_gap_days)
+    return {
+        cid: info for cid, info in cluster_store.items()
+        if date.fromisoformat(info['last_visit']) >= cutoff
+    }
+
+# -------------------- 로그 전처리 --------------------
+def preprocess_logs(raw_logs):
+    parsed_data = []
+    for log in raw_logs:
+        lat, lon = parse_point(log['coordness'])
+        parsed_data.append({
+            "id":log['id'],
+            "timestamp": pd.to_datetime(log['time']),
+            "lat": lat,
+            "lon": lon,
+            "uid": log['uid']
+        })
+    return pd.DataFrame(parsed_data)
+
+def cluster_store_to_log_entries(cluster_store):
+    log_entries = []
+    for i, (cid, info) in enumerate(cluster_store.items(), start=1):
+        # 좌표 소수점 6자리까지 포맷
+        lat = round(info['lat'], 6)
+        lon = round(info['lon'], 6)
+        # 마지막 방문일 문자열 → datetime → ISO 문자열
+        dt = datetime.fromisoformat(info['last_visit'])
+        iso_time = dt.isoformat() + 'Z'
+        log_entries.append({
+            "id": info.get("id", i), 
+            "coordness": f"POINT({lon:.6f} {lat:.6f})",
+            "time": iso_time,
+            "stat": len(info.get('visit_days', [])),
+            "uid": info.get("uid", str(uuid.uuid4())), 
+        })
+    return log_entries
+
+def update():
+    data=[]
+    headers=[]
+    res =r.get("http://localhost:3000/location/logs", headers=headers, data=data)
+    #한달 데이터를 리스트 안에 넣어준다.##########
+    raw_logs = []
+    raw_logs=res.text
+    logs = preprocess_logs(raw_logs)
+    data=[]
+    headers=[]
+    #현욱이한테 이벤트 좌표들 모아놓은거 있나 확인하기#######따로 확인하기 다른 코드가 있나
+    res = r.get("http://localhost:3000/location/fav/point", headers=headers, data=data)
+    # 1. 초기 클러스터 생성
+    if res.response_status==404:
+        cluster_store = detect_initial_clusters(logs)
+    else:
+        cluster_store=res.text
+
+    # 2. 실시간 로그 업데이트 실행 (마지막 날짜 기준)
+    for _, row in logs.iterrows():
+        update_or_create_cluster(row, cluster_store)
+
+    # 3. 60일 이상 미방문 클러스터 제거
+    reference_date = logs['timestamp'].max().date()
+    cluster_store = prune_old_clusters(cluster_store, reference_date)
+
+    cluster_store = {
+        cid: info for cid, info in cluster_store.items()
+        #방문일수로 필터링
+        if len(info['visit_days']) >= 10
+    }
+    # 결과 출력 내가 너한테 데이터를 줄때 클러스터 데이터랑// 회사 좌표를 줄꺼야
+    
+    output=cluster_store_to_log_entries(cluster_store)
+    
+    #현욱이한테 요청해서 보내기
+    print(json.dumps(output,indent=2))
