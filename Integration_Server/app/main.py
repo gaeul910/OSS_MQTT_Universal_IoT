@@ -450,8 +450,27 @@ def route():
         return "Invalid Session", 403
     session_uid = auth_stat
     if(request.method == 'GET'):
-        dict_req = request.get_json()
-        startlocation_id = dict_req["startlocation_id"]
+        # Load Request
+        try:
+            dict_req = request.get_json()
+            startlocation_id = dict_req["startlocation_id"]
+        except:
+            return "Error while Loading Request", 500
+
+        # get uid for auth
+        try:
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (startlocation_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from location_id for auth", 500
+        
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        
+        # query
         query = "SELECT id, startlocation_id, endlocation_id, ST_AsText(route) AS route, status FROM userfavroute WHERE startlocation_id = %s"
         cursor.execute(query, (startlocation_id, ))
         ret = cursor.fetchall()
