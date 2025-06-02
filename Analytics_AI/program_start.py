@@ -39,3 +39,21 @@ class UserTracker:
         self.status = "in"  # 집에 있는 상태로 시작
         self.event = None
 
+    def wait_until_leave_home(self):
+        print("실시간으로 데이터 받는중")
+        while self.status == "in":
+            self.user.route=""
+            time.sleep(3)
+
+            if should_update():
+                update_clusters()
+            else:
+                print("아직 30일이 안됐음")
+
+            self.user.get()
+            if self.user.home_out() == '집을 나감':
+                self.status = "out"
+                print("집을 나감")
+                MS.switch(0,self.user.now_uid)
+                break
+
