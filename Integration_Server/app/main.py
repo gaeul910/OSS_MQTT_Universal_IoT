@@ -575,6 +575,9 @@ def eventlogs():
         return "Invalid Session", 403
     session_uid = auth_stat
     if(request.method == 'GET'):
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0]:
+            return "Permission Denied", 403
         dict_req = request.get_json()
         event_id = dict_req["location_id"]
         query = "SELECT * FROM eventlog WHERE location_id = %s"
