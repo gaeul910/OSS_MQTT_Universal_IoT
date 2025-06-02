@@ -17,3 +17,7 @@ def get_last_run_date():
         data = json.load(f)
         return datetime.fromisoformat(data["last_run"])
 
+def save_last_run_date():
+    with open(LAST_RUN_FILE, "w") as f:
+        json.dump({"last_run": datetime.now().isoformat()}, f)
+
