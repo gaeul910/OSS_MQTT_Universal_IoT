@@ -714,11 +714,22 @@ def postnoti():
 @app.route("/notification/sync", methods=['GET', 'POST'])
 
 def sync():
+    get_permission = [0, 1, 1, 0]
+    post_permission = [0, 2, 0, 2]
+
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if request.method == 'GET':
-        uid = request.headers["uid"]
-        uid = int(uid)
         try:
-            cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
+            cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (session_uid, 0,))
 
             ret = cursor.fetchall()
             if not ret:
