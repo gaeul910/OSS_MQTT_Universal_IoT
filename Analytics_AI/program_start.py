@@ -83,3 +83,9 @@ class UserTracker:
                 self.prepare_home_entry()
                 return
 
+    def prepare_home_entry(self):
+        print("곧 집에 들어옵니다")
+        MS.switch(1,self.user.now_uid)
+        self.status = "in"
+        self.event = None
+
