@@ -6,3 +6,14 @@ import json
 import os
 from datetime import datetime, timedelta
 import set_of_request as RR
+
+LAST_RUN_FILE = "last_run.json"
+INTERVAL_DAYS = 30  
+
+def get_last_run_date():
+    if not os.path.exists(LAST_RUN_FILE):
+        return None  # 실행 이력 없음
+    with open(LAST_RUN_FILE, "r") as f:
+        data = json.load(f)
+        return datetime.fromisoformat(data["last_run"])
+
