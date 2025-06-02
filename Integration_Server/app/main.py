@@ -66,9 +66,18 @@ def gen_auth_code():
     expiry = time.time() + 60  # 1 minute from now
     return auth_code
 
+def check_permission(uid, perms_list):
+    try:
+        query = "SELECT permission FROM users WHERE uid = %s"
+        cursor.execute(query, (uid, ))
+        ret = cursor.fetchone()
+        permission = ret["permission"]
+        return perms_list[permission]
+    except:
+        return -1
+
 def auth_user(session_token):
     try:
-        cursor.fetchall()
         delete_expired_session()
         query = "SELECT * FROM clients WHERE token = %s AND expire_time > NOW()"
         cursor.execute(query, (session_token, ))
@@ -244,9 +253,9 @@ def register():
                         return "UID generation Failed", 500
                     permission_input = request.form["permission"]
                     if permission_input == "Admin":
-                        permission = 0
-                    elif permission_input == "User":
                         permission = 1
+                    elif permission_input == "User":
+                        permission = 2
                     else:
                         return "Invalid Request", 400
                     query = "INSERT INTO users VALUES (%s, %s)"
@@ -281,6 +290,10 @@ def register():
 @app.route("/users", methods=['GET'])
 
 def users():
+    # permission list
+    get_permission = [2, 2, 2, 2]
+    
+    # auth feature
     try:
         auth_stat = auth_user(request.headers["Session-Token"])
     except:
@@ -289,8 +302,10 @@ def users():
         return "Authentication Server Error", 500
     elif auth_stat == -2:
         return "Invalid Session", 403
+    session_uid = auth_stat
+    # get users info
     try:
-        cursor.fetchall() # Prevents Unintended Value
+        # no permission validation because all session have access to this backend
         query = "SELECT uid FROM users WHERE uid <> 0"
         cursor.execute(query)
         ret = cursor.fetchall()
@@ -301,28 +316,51 @@ def users():
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
+    # permission
+    get_permission = [0, 1, 1, 2]
+    post_permission = [0, 1, 1, 0]
+
+    
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if(request.method == 'GET'):
-        dict_req = request.get_json()
-        uid = dict_req["uid"]
-        location_id = dict_req["location_id"]
-        query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id = %s"
-        cursor.execute(query, (uid, location_id))
-        ret = cursor.fetchall()
-        if not ret:
-            return "No data found for uid: {} after location_id: {}".format(uid, location_id)
+        try:
+            dict_req = request.get_json()
+            uid = dict_req["uid"]
+            # Permission Validation
+            if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+                return "Permission Denied", 403
+            location_id = dict_req["location_id"]
+            query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id >= %s"
+            cursor.execute(query, (uid, location_id))
+            ret = cursor.fetchall()
+            if not ret:
+                return "No data found for uid: {} after location_id: {}".format(uid, location_id)
+        except:
+            return "Internel Server Error", 500
         return ret
         
     elif(request.method == 'POST'):
         try:
+            # Gets uid from session_uid
+            if check_permission(session_uid, post_permission) in [0]:
+                return "Permission Denied", 403
             get_dict = request.get_json()
-            uid = get_dict["uid"]
             coordinate = get_dict["coordinate"]
             issued = get_dict["time"]
             location_id = gen_id("locationlog", "id")
             if location_id == -1:
                 return "POST unsuccessful, Error while id generation"
             query = "INSERT INTO locationlog VALUES (%s, %s, ST_GeomFromText(%s), %s)"
-            ret = cursor.execute(query, (location_id, uid, coordinate, issued))
+            ret = cursor.execute(query, (location_id, session_uid, coordinate, issued))
         except:
             return f"POST unsuccessful, {ret}"
         return "Success"
@@ -330,9 +368,28 @@ def logs():
 @app.route("/location/fav/point", methods=['GET', 'POST', 'DELETE'])
 
 def point():
+    # permission
+    get_permission = [0, 1, 1, 2]
+    post_permission = [0, 0, 0, 2]
+    delete_permission = [0, 1, 1, 2]
+
+    
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if(request.method == 'GET'):
         dict_req = request.get_json()
         uid = dict_req["uid"]
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
         query = "SELECT id, uid, alias, ST_AsText(coordinate) as coordinate, status FROM userfavlocation WHERE uid = %s"
         cursor.execute(query, (uid, ))
         ret = cursor.fetchall()
@@ -340,10 +397,14 @@ def point():
             return "No data found for uid: {}".format(uid)
         return ret
     
+    # This middleware is usually used by services
     elif(request.method == 'POST'):
         try:
             get_dict = request.get_json()
+            # Get uid by request
             uid = get_dict["uid"]
+            if check_permission(session_uid, post_permission) in [0]:
+                return "Permission Denied", 403
             coordinate = get_dict["coordinate"]
             alias = get_dict["alias"]
             status = get_dict["status"]
@@ -360,7 +421,9 @@ def point():
         try:
             get_dict = request.get_json()
             point_id = get_dict["point_id"]
-            uid = get_dict["uid"]
+            uid = get_dict["uid"] # point_id owner uid must be validated before removing this from request
+            if check_permission(session_uid, delete_permission) in [0, 1] and uid != session_uid:
+                return "Permission Denied", 403
             query = "DELETE FROM userfavlocation WHERE id = %s AND uid = %s"
             ret = cursor.execute(query, (point_id, ))
         except:
@@ -370,9 +433,44 @@ def point():
 @app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
 
 def route():
+    # permission
+    get_permission = [0, 1, 1, 2]
+    post_permission = [0, 0, 0, 2]
+    delete_permission = [0, 1, 1, 2]
+
+    
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if(request.method == 'GET'):
-        dict_req = request.get_json()
-        startlocation_id = dict_req["startlocation_id"]
+        # Load Request
+        try:
+            dict_req = request.get_json()
+            startlocation_id = dict_req["startlocation_id"]
+        except:
+            return "Error while Loading Request", 500
+
+        # get uid for auth
+        try:
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (startlocation_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from location_id for auth", 500
+        
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        
+        # query
         query = "SELECT id, startlocation_id, endlocation_id, ST_AsText(route) AS route, status FROM userfavroute WHERE startlocation_id = %s"
         cursor.execute(query, (startlocation_id, ))
         ret = cursor.fetchall()
@@ -382,6 +480,11 @@ def route():
     
     elif(request.method == 'POST'):
         try:
+            # Permission  Validation
+            if check_permission(session_uid, post_permission) in [0]:
+                return "Permission Denied", 403
+            
+            # Process Request
             get_dict = request.get_json()
             route = get_dict["route"]
             startlocation_id = get_dict["startlocation_id"]
@@ -400,9 +503,26 @@ def route():
         try:
             get_dict = request.get_json()
             route_id = get_dict["route_id"]
-            uid = get_dict["uid"]
-            query = "DELETE FROM userfavroute WHERE id = %s AND uid = %s"
-            ret = cursor.execute(query, (route_id, uid, ))
+        except:
+            return "Error while processing request", 500
+
+        try:
+            query = "SELECT startlocation_id FROM userfavroute WHERE id = %s"
+            cursor.execute(query, (route_id, ))
+            ret = cursor.fetchone()
+            location_id = ret["startlocation_id"]
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (location_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from route_id for auth", 500
+        
+        if check_permission(session_uid, delete_permission) in [0, 1] and uid != session_uid:
+                return "Permission Denied", 403
+        try:
+            query = "DELETE FROM userfavroute WHERE id = %s"
+            ret = cursor.execute(query, (route_id, ))
             return "Success"
         except:
             return "DELETE unsuccessful"
@@ -410,7 +530,22 @@ def route():
 @app.route("/event/visits", methods=['GET'])
 
 def visits():
+    get_permission = [0, 1, 1, 2]
+
+    # auth feature
     try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+    try:
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0]:
+            return "Permission Denied", 403
         visit_identifier = 0
         dict_req = request.get_json()
         location_id = dict_req["location_id"]
@@ -425,7 +560,24 @@ def visits():
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
 def eventlogs():
+    get_permission = [0, 1, 1, 2, 2]
+    post_permission = [0, 1, 1, 2, 2]
+    delete_permission = [0, 1, 1, 2, 2]
+
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if(request.method == 'GET'):
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0]:
+            return "Permission Denied", 403
         dict_req = request.get_json()
         event_id = dict_req["location_id"]
         query = "SELECT * FROM eventlog WHERE location_id = %s"
@@ -436,16 +588,33 @@ def eventlogs():
         return ret
     
     elif(request.method == 'POST'):
+        # request process
         try:
             get_dict = request.get_json()
-            log_id = get_dict["log_id"]
-            event_id = get_dict["location_id"]
+            issued = get_dict["time"]
+            location_id = get_dict["location_id"]
             about = get_dict["about"]
             event_id = gen_id("eventlog", "id")
             if event_id == -1:
                 return "POST unsuccessful, Error while id generation"
+        except:
+            return "Error while processing request", 500
+        # get uid for auth
+        try:
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (location_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from location_id for auth", 500
+        
+        # Permission Validation
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        
+        try:
             query = "INSERT INTO eventlog VALUES (%s, %s, %s, %s)"
-            ret = cursor.execute(query, (event_id, event_id, log_id, about, ))
+            ret = cursor.execute(query, (event_id, location_id, issued, about, ))
         except:
             return f"POST unsuccessful, {ret}"
         return "Success"
@@ -454,15 +623,44 @@ def eventlogs():
         try:
             get_dict = request.get_json()
             event_id = get_dict["event_id"]
+        except:
+            return "Error while processing request", 500
+        try:
+            query = "SELECT location_id FROM eventlog WHERE id = %s"
+            cursor.execute(query, (event_id, ))
+            ret = cursor.fetchone()
+            location_id = ret["location_id"]
+            query = "SELECT uid FROM userfavlocation WHERE id = %s"
+            cursor.execute(query, (location_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from event_id for auth", 500
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        try:
             query = "DELETE FROM eventlog WHERE id = %s"
             ret = cursor.execute(query, (event_id, ))
             return "Success"
         except:
-            return "DELETE unsuccessful"
+            return "Error while interacting with database", 500
 
 @app.route("/notification/getnoti", methods=['GET'])
 
 def getnoti():
+    get_permission = [0, 1, 1, 2]
+
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+
     notification_id = request.headers["id"]
     notification_id = int(notification_id)
     try:
@@ -478,35 +676,60 @@ def getnoti():
 @app.route("/notification/postnoti", methods=['POST'])
 
 def postnoti():
-        uid = request.headers["uid"]
-        dict_req = request.get_json()
-        content = dict_req["content"]
-        issue = dict_req["time"]
-        about = dict_req["about"]
-        uid = int(uid)
-        query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
-        cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
-        getdict = cursor.fetchone()
-        notification_id = getdict['highest_id']
-        if not notification_id:
-            notification_id = 0
-        notification_id += 1
+    post_permission = [0, 2, 0, 2]
 
-        try:
-            cursor.execute(query, (notification_id, uid, content, issue, 0, about))
-        except:
-            return "Error"
-        conn.commit()
-        return "Success"
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+    if check_permission(session_uid, post_permission) in [0]:
+            return "Permission Denied", 403
+    dict_req = request.get_json()
+    uid = dict_req["uid"] # changes
+    content = dict_req["content"]
+    issue = dict_req["time"]
+    about = dict_req["about"]
+    uid = int(uid)
+    query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
+    cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
+    getdict = cursor.fetchone()
+    notification_id = getdict['highest_id']
+    if not notification_id:
+        notification_id = 0
+    notification_id += 1
+
+    try:
+        cursor.execute(query, (notification_id, uid, content, issue, 0, about))
+    except:
+        return "Error"
+    conn.commit()
+    return "Success"
 
 @app.route("/notification/sync", methods=['GET', 'POST'])
 
 def sync():
+    get_permission = [0, 1, 1, 0]
+    post_permission = [0, 2, 0, 2]
+
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
     if request.method == 'GET':
-        uid = request.headers["uid"]
-        uid = int(uid)
         try:
-            cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (uid, 0,))
+            cursor.execute("SELECT id FROM usernotifications WHERE uid = %s AND stat = %s", (session_uid, 0,))
 
             ret = cursor.fetchall()
             if not ret:
@@ -514,13 +737,29 @@ def sync():
         except:
             return f"Error: {ret}"
         return ret
+
+    # POST
     elif request.method == 'POST':
+        # Load Request
         try:
             req_dict = request.get_json()
             req_notification_id = req_dict["notification_id"]
         except:
             return "Required data not in request", 400
         
+        # Permission Validation
+        try:
+            query = "SELECT uid FROM usernotifications WHERE id = %s"
+            cursor.execute(query, (req_notification_id, ))
+            ret = cursor.fetchone()
+            uid = ret["uid"]
+        except:
+            return "Error while getting uid from notification_id for auth", 500
+        
+        if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
+            return "Permission Denied", 403
+        
+        # Process
         try:
             query = "UPDATE usernotifications SET stat = %s WHERE id = %s"
             cursor.execute(query, (1, req_notification_id, ))
