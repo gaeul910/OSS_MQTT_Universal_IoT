@@ -71,13 +71,16 @@ def detect_initial_clusters(logs):
     for cid, days in cluster_visit_days.items():
         #초기 방문일수로 필터링
         if len(days) >= 10:
-            cluster_points = logs[logs['cluster'] == cid][['lat', 'lon']]
-            center = cluster_points.mean()
-            cluster_store[str(center['uid'])] = {
+            cluster_points = logs[logs['cluster'] == cid][['lat', 'lon', 'uid']]
+            
+            representative_uid = cluster_points['uid'].iloc[0]
+            center = cluster_points[['lat', 'lon']].mean()
+            
+            cluster_store[cid] = {
                 "lat": center['lat'],
                 "lon": center['lon'],
                 "visit_days": set(days),
-                "last_visit": max(days)
+                "uid": representative_uid,
             }
 
     return cluster_store
@@ -90,22 +93,18 @@ def update_or_create_cluster(log, cluster_store):
     for cid, info in cluster_store.items():
         if is_same_cluster(lat, lon, info['lat'], info['lon']):
             info['visit_days'].add(date)
-            info['last_visit'] = max(info['last_visit'], date)
             return
 
-    cluster_store[str(log['uid'])] = {
+    if cluster_store:
+        new_cid = max(cluster_store.keys()) + 1
+    else:
+        new_cid = 0
+
+    cluster_store[new_cid] = {
         "lat": lat,
         "lon": lon,
         "visit_days": {date},
-        "last_visit": date
-    }
-
-# -------------------- 클러스터 정리 --------------------
-def prune_old_clusters(cluster_store, reference_date, max_gap_days=60):
-    cutoff = reference_date - timedelta(days=max_gap_days)
-    return {
-        cid: info for cid, info in cluster_store.items()
-        if date.fromisoformat(info['last_visit']) >= cutoff
+        "uid": log['uid'],
     }
 
 # -------------------- 로그 전처리 --------------------
@@ -128,18 +127,15 @@ def cluster_store_to_log_entries(cluster_store):
         # 좌표 소수점 6자리까지 포맷
         lat = round(info['lat'], 6)
         lon = round(info['lon'], 6)
-        # 마지막 방문일 문자열 → datetime → ISO 문자열
-        dt = datetime.fromisoformat(info['last_visit'])
-        iso_time = dt.isoformat() + 'Z'
         log_entries.append({
-            "id": info.get("id", i), 
+            "cluster_id": cid, 
             "coordness": f"POINT({lon:.6f} {lat:.6f})",
-            "time": iso_time,
             "stat": len(info.get('visit_days', [])),
             "uid": info.get("uid", str(uuid.uuid4())), 
         })
     return log_entries
 
+# -------------------- 테스트 --------------------
 def update():
     data=[]
     headers=[]
@@ -153,7 +149,7 @@ def update():
     #현욱이한테 이벤트 좌표들 모아놓은거 있나 확인하기#######따로 확인하기 다른 코드가 있나
     res = r.get("http://localhost:3000/location/fav/point", headers=headers, data=data)
     # 1. 초기 클러스터 생성
-    if res.response_status==404:
+    if res.status_code==404:
         cluster_store = detect_initial_clusters(logs)
     else:
         cluster_store=res.text
@@ -162,9 +158,6 @@ def update():
     for _, row in logs.iterrows():
         update_or_create_cluster(row, cluster_store)
 
-    # 3. 60일 이상 미방문 클러스터 제거
-    reference_date = logs['timestamp'].max().date()
-    cluster_store = prune_old_clusters(cluster_store, reference_date)
 
     cluster_store = {
         cid: info for cid, info in cluster_store.items()
@@ -172,8 +165,16 @@ def update():
         if len(info['visit_days']) >= 10
     }
     # 결과 출력 내가 너한테 데이터를 줄때 클러스터 데이터랑// 회사 좌표를 줄꺼야
+
+    for cid in cluster_store:
+        cluster_store[cid]["visit_days"] = set()  # 방문일수를 0으로 설정
+
     
     output=cluster_store_to_log_entries(cluster_store)
+
+    if not output:
+        print("보낼 데이터가 존재하지 않음")
+        return
     
     #현욱이한테 요청해서 보내기
-    print(json.dumps(output,indent=2))
+    return output
