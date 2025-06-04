@@ -29,10 +29,17 @@ services:
       - "3000:5000"
 
   analytics-server:
-    image: python:slim
-    restart: always
+    container_name: analytics-server
     networks:
       - backend-network
+    build:
+      context: ./Analytics_AI
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+      - integration-server
+    restart: always
+
 networks:
   backend-network:
     driver: bridge
