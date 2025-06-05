@@ -242,7 +242,7 @@ def register():
         elif auth_stat == -1:
             return "Internel Server Error", 500 # Server Error
         # Registration Process
-        if auth_stat == 0:
+        elif auth_stat == 0:
             if request.method == 'GET':
                 return render_template("register.html")
 
@@ -262,7 +262,9 @@ def register():
                     cursor.execute(query, (uid, permission, ))
                 except:
                     return "Internel Server Error", 500
-            return f"Process Successful, new uid is {uid}", 200
+            return f"Process Successful, new uid is {uid}"
+        else:
+            return "Unauthorized", 403
     else:
         if request.method == 'GET':
             return render_template("root_register.html")
