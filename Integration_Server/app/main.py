@@ -240,7 +240,7 @@ def register():
         if auth_stat == -2:
             return "Invalid Session", 403 # Session Invalid
         elif auth_stat == -1:
-            return "Internel Server Error", 500 # Server Error
+            return "Internal Server Error", 500 # Server Error
         # Registration Process
         if auth_stat == 0:
             if request.method == 'GET':
@@ -260,9 +260,9 @@ def register():
                         return "Invalid Request", 400
                     query = "INSERT INTO users VALUES (%s, %s)"
                     cursor.execute(query, (uid, permission, ))
+                    return f"Process Successful, new uid is {uid}", 200
                 except:
-                    return "Internel Server Error", 500
-            return f"Process Successful, new uid is {uid}", 200
+                    return "Internal Server Error", 500
     else:
         if request.method == 'GET':
             return render_template("root_register.html")
@@ -284,7 +284,7 @@ def register():
                 except:
                     return "Database Error", 500
             except:
-                return "Internel Server Error", 500
+                return "Internal Server Error", 500
             return "Registration Sucessful", 200
 
 @app.route("/users", methods=['GET'])
@@ -310,7 +310,7 @@ def users():
         cursor.execute(query)
         ret = cursor.fetchall()
     except:
-        return "Internel Server Error", 500
+        return "Internal Server Error", 500
     return ret
 
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
@@ -343,9 +343,9 @@ def logs():
             cursor.execute(query, (uid, location_id))
             ret = cursor.fetchall()
             if not ret:
-                return "No data found for uid: {} after location_id: {}".format(uid, location_id)
+                return "No data found for uid: {} after location_id: {}".format(uid, location_id), 404
         except:
-            return "Internel Server Error", 500
+            return "Internal Server Error", 500
         return ret
         
     elif(request.method == 'POST'):
@@ -362,7 +362,7 @@ def logs():
             query = "INSERT INTO locationlog VALUES (%s, %s, ST_GeomFromText(%s), %s)"
             ret = cursor.execute(query, (location_id, session_uid, coordinate, issued))
         except:
-            return f"POST unsuccessful, {ret}"
+            return f"POST unsuccessful, {ret}", 500
         return "Success"
 
 @app.route("/location/latest", methods=['GET'])
@@ -442,7 +442,7 @@ def point():
             query = "INSERT INTO userfavlocation VALUES (%s, %s, %s, ST_GeomFromText(%s), %s)"
             ret = cursor.execute(query, (point_id, uid, alias, coordinate, status))
         except:
-            return f"POST unsuccessful, {ret}"
+            return f"POST unsuccessful, {ret}", 500
         return "Success"
     
     elif(request.method == 'DELETE'):
@@ -455,7 +455,7 @@ def point():
             query = "DELETE FROM userfavlocation WHERE id = %s AND uid = %s"
             ret = cursor.execute(query, (point_id, ))
         except:
-            return "DELETE unsuccessful"
+            return "DELETE unsuccessful", 500
         return "Success"
     
 @app.route("/location/fav/route", methods=['GET', 'POST', 'DELETE'])
@@ -503,7 +503,7 @@ def route():
         cursor.execute(query, (startlocation_id, ))
         ret = cursor.fetchall()
         if not ret:
-            return "No data found for startlocation_id: {}".format(startlocation_id)
+            return "No data found for startlocation_id: {}".format(startlocation_id), 404
         return ret
     
     elif(request.method == 'POST'):
@@ -524,7 +524,7 @@ def route():
             query = "INSERT INTO userfavroute VALUES (%s, %s, %s, ST_GeomFromText(%s), %s)"
             ret = cursor.execute(query, (route_id, startlocation_id, endlocation_id, route, status))
         except:
-            return f"POST unsuccessful, {ret}"
+            return f"POST unsuccessful, {ret}", 500
         return "Success"
     
     elif(request.method == 'DELETE'):
@@ -553,7 +553,7 @@ def route():
             ret = cursor.execute(query, (route_id, ))
             return "Success"
         except:
-            return "DELETE unsuccessful"
+            return "DELETE unsuccessful", 500
 
 @app.route("/event/visits", methods=['GET'])
 
@@ -582,7 +582,7 @@ def visits():
         cursor.execute(query, (location_id, visit_identifier, lookup_days, ))
         ret = cursor.fetchone()
     except:
-        return "Internel Server Error", 500
+        return "Internal Server Error", 500
     return ret
 
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
@@ -612,7 +612,7 @@ def eventlogs():
         cursor.execute(query, (event_id, ))
         ret = cursor.fetchall()
         if not ret:
-            return "No data found for event_id: {}".format(event_id)
+            return "No data found for event_id: {}".format(event_id), 404
         return ret
     
     elif(request.method == 'POST'):
@@ -644,7 +644,7 @@ def eventlogs():
             query = "INSERT INTO eventlog VALUES (%s, %s, %s, %s)"
             ret = cursor.execute(query, (event_id, location_id, issued, about, ))
         except:
-            return f"POST unsuccessful, {ret}"
+            return f"POST unsuccessful, {ret}", 404
         return "Success"
     
     elif(request.method == 'DELETE'):
@@ -688,17 +688,19 @@ def getnoti():
     elif auth_stat == -2:
         return "Invalid Session", 403
     session_uid = auth_stat
-
-    notification_id = request.headers["id"]
-    notification_id = int(notification_id)
+    try:
+        notification_id = request.headers["id"]
+        notification_id = int(notification_id)
+    except:
+        return "Bad request", 400
     try:
         cursor.execute("SELECT * FROM usernotifications WHERE id = %s", (notification_id,))
         ret = cursor.fetchall()
         
         if not ret:
-            return "No notification found for {}".format(notification_id)
+            return "No notification found for {}".format(notification_id), 404
     except:
-        return f"Error: {ret}"
+        return f"Error: {ret}", 500
     return ret
     
 @app.route("/notification/postnoti", methods=['POST'])
@@ -761,9 +763,9 @@ def sync():
 
             ret = cursor.fetchall()
             if not ret:
-                return "No data to sync"
+                return "No data to sync", 404
         except:
-            return f"Error: {ret}"
+            return f"Error: {ret}", 500
         return ret
 
     # POST
@@ -793,7 +795,7 @@ def sync():
             cursor.execute(query, (1, req_notification_id, ))
             return "OK", 200
         except:
-            return "Internel Server Error", 500
+            return "Internal Server Error", 500
 
 
 if __name__ == "__main__":
