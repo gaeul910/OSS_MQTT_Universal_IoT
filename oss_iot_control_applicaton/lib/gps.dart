@@ -78,3 +78,10 @@ Future<void> startTracking({void Function(Position)? onUpdate}) async {
     }
   });
 }
+
+/// 위치 추적 및 전송 중지
+void stopTracking() {
+  _positionStream?.cancel();
+  _sendTimer?.cancel();
+  _isTracking = false;
+}
