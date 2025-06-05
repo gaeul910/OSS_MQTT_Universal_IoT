@@ -36,3 +36,24 @@ class GpsTracker {
     if (sessionToken != null) _sessionToken = sessionToken;
   }
 }
+
+/// 위치 추적 시작 및 주기적 서버 전송
+Future<void> startTracking({void Function(Position)? onUpdate}) async {
+  // 권한 및 서비스 체크
+  bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    throw Exception('위치 서비스가 꺼져 있습니다.');
+  }
+  LocationPermission permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      throw Exception('위치 권한이 거부되었습니다.');
+    }
+  }
+  if (permission == LocationPermission.deniedForever) {
+    throw Exception('위치 권한이 영구적으로 거부되었습니다.');
+  }
+
+  if (_isTracking) return; // 중복 방지
+  _isTracking = true;
