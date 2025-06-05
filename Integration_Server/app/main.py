@@ -365,6 +365,34 @@ def logs():
             return f"POST unsuccessful, {ret}"
         return "Success"
 
+@app.route("/location/latest", methods=['GET'])
+
+def latest():
+   # permission
+    get_permission = [0, 1, 1, 2]
+    
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+
+    # Process
+    
+    get_dict = request.get_json()
+    uid = get_dict["uid"]
+    
+    query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s ORDER BY time DESC LIMIT 1"
+    cursor.execute(query, (uid, ))
+    ret = cursor.fetchone()
+
+    return ret
+
 @app.route("/location/fav/point", methods=['GET', 'POST', 'DELETE'])
 
 def point():
