@@ -85,3 +85,37 @@ void stopTracking() {
   _sendTimer?.cancel();
   _isTracking = false;
 }
+
+/// 서버로 위치 전송
+Future<void> _sendLocationToServer() async {
+  if (_ip.isEmpty || _port.isEmpty || _uid.isEmpty || latitude == null || longitude == null) return;
+
+  try {
+    final format = DateFormat('yyyy-MM-dd HH:mm:ss');
+    final timeString = format.format(DateTime.now());
+
+    final body = jsonEncode({
+      'uid': _uid,
+      'time': timeString,
+      'coordinate': 'POINT($latitude $longitude)',
+    });
+
+    final response = await http.post(
+      Uri.parse('http://$_ip:$_port/location/logs'),
+      headers: {
+        'content-type': 'application/json',
+        'session-token': _sessionToken,
+      },
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      debugPrint('위치 전송 성공');
+    } else {
+      debugPrint('위치 전송 실패: ${response.body}');
+    }
+  } catch (e) {
+    debugPrint('위치 전송 오류: $e');
+  }
+}
+}
