@@ -12,4 +12,19 @@ class GpsTracker {
   factory GpsTracker() => _instance;
 
   GpsTracker._internal();
+
+  // 서버 정보 및 사용자 정보
+  late String _ip;
+  late String _port;
+  late String _uid;
+  String _sessionToken = 'your_token_here'; // 필요시 setter로 변경
+
+  // 위치 정보
+  double? latitude;
+  double? longitude;
+
+  // 내부 상태
+  bool _isTracking = false;
+  StreamSubscription<Position>? _positionStream;
+  Timer? _sendTimer;
 }
