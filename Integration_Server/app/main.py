@@ -60,7 +60,7 @@ expiry = 0
 def gen_auth_code():
     global auth_code, expiry
     code_list = []
-    for i in range(8):
+    for i in range(6):
         code_list.append(str(random.randint(0, 9)))
     auth_code = "".join(code_list)
     expiry = time.time() + 60  # 1 minute from now
