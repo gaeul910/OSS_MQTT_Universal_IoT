@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'lobby.dart';
 import 'notifications.dart';
+import 'gps.dart';
 // 로그인 페이지 위젯 (StatefulWidget으로 입력값 관리)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,7 +16,7 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController _textController = TextEditingController(); // ip 입력 컨트롤러
   final TextEditingController _portController = TextEditingController();
-
+  final TextEditingController _uidController = TextEditingController();  // uid 입력
   // 사용자가 입력한 인증코드 저장 변수
   String _enteredCode = '';
 
@@ -23,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   void _onLogin(BuildContext context, String code) {
     String inputText = _textController.text.trim(); // 문자열 입력값
     String portText = _portController.text.trim();
+    String uidText = _uidController.text.trim();
     // 주소 입력이 비었는지 체크
     if (inputText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,16 +38,29 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
+    if (uidText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('uid를 입력해주세요.')),
+      );
+      return;
+    }
+    int? userId = int.tryParse(uidText);
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('uid는 숫자만 입력해야 합니다.')),
+      );
+      return;
+    }
 
     // 인증코드가 일치하는지 체크
     if (code == correctCode) {
-      const int userId = 123;
       NotificationService().configure(
         ip: inputText,
         port: portText,
         uid: userId,
       );
       NotificationService().startPolling();
+      GpsTracker().startTracking();
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LobbyScreen()),
@@ -61,7 +76,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ip주소 + port 번호 + 인증코드 입력')),
+      appBar: AppBar(title: const Text('통신정보 및 인증코드 입력')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -84,6 +99,16 @@ class _LoginPageState extends State<LoginPage> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: '포트 번호 입력',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            TextField(
+              controller: _uidController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'uid 입력 (숫자)',
                 border: OutlineInputBorder(),
               ),
             ),
