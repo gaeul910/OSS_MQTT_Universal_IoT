@@ -57,3 +57,24 @@ Future<void> startTracking({void Function(Position)? onUpdate}) async {
 
   if (_isTracking) return; // 중복 방지
   _isTracking = true;
+
+  // 실시간 위치 스트림 구독
+  _positionStream = Geolocator.getPositionStream(
+    locationSettings: const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    ),
+  ).listen((Position position) {
+    latitude = position.latitude;
+    longitude = position.longitude;
+    if (onUpdate != null) onUpdate(position);
+    debugPrint('실시간 위치: $latitude, $longitude');
+  });
+
+  // 1분마다 서버 전송 타이머 시작
+  _sendTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    if (latitude != null && longitude != null) {
+      _sendLocationToServer();
+    }
+  });
+}
