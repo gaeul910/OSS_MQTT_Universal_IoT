@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'login.dart'; // LoginPage가 정의된 파일 import
 import 'config.dart';
 import 'notifications.dart'; // 알림 서비스 import
+import 'package:permission_handler/permission_handler.dart';
 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Permission.location.request();
   await NotificationService().initialize(); // 알림 플러그인 초기화
   runApp(const MyApp());
 }
