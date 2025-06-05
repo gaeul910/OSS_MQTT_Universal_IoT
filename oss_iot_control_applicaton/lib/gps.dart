@@ -27,4 +27,12 @@ class GpsTracker {
   bool _isTracking = false;
   StreamSubscription<Position>? _positionStream;
   Timer? _sendTimer;
+
+  /// 서버 정보 및 uid 설정 (로그인 시 호출)
+  void configure({required String ip, required String port, required dynamic uid, String? sessionToken}) {
+    _ip = ip;
+    _port = port;
+    _uid = uid.toString();
+    if (sessionToken != null) _sessionToken = sessionToken;
+  }
 }
