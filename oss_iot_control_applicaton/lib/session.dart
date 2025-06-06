@@ -26,4 +26,25 @@ class SessionManager {
     _port = port;
     _setupRenewTimer();
   }
+  /// 세션 키 반환 (앱 전체에서 사용)
+  String? get sessionToken => _sessionToken;
+
+  /// 서버 정보 반환 (필요시)
+  String? get ip => _ip;
+  String? get port => _port;
+
+  /// 매일 자정마다 세션 갱신 타이머 설정
+  void _setupRenewTimer() {
+    _renewTimer?.cancel();
+
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    final duration = nextMidnight.difference(now);
+
+    // 자정까지 기다렸다가, 이후 매 24시간마다 갱신
+    _renewTimer = Timer(duration, () {
+      _renewSession();
+      _renewTimer = Timer.periodic(const Duration(days: 1), (_) => _renewSession());
+    });
+  }
 }
