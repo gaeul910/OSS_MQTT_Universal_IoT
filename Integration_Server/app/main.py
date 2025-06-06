@@ -453,7 +453,7 @@ def point():
             if check_permission(session_uid, delete_permission) in [0, 1] and uid != session_uid:
                 return "Permission Denied", 403
             query = "DELETE FROM userfavlocation WHERE id = %s AND uid = %s"
-            ret = cursor.execute(query, (point_id, ))
+            ret = cursor.execute(query, (point_id, uid))
         except:
             return "DELETE unsuccessful", 500
         return "Success"
