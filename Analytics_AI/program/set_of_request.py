@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 
 
 
-route_adress="http://localhost:3000/location/fav/route"
-favpoint_adress="http://localhost:3000/location/fav/point"
+route_adress="http://integration-server:3000/location/fav/route"
+favpoint_adress="http://integration-server:3000/location/fav/point"
 
 
 def route_get(pointer,route):
@@ -84,7 +84,7 @@ def favorite_point_get(uid):
     headers = {"Content-Type": "application/json", "session-token": token_get()}
     data = f'{{"uid": {uid}}}'
     res = r.get(favpoint_adress, headers=headers, data=data)
-    if res.status_code == 404:
+    if res.status_code != 200:
         return 404
     else:
         return res.json()
@@ -92,29 +92,34 @@ def favorite_point_get(uid):
 
 def uid_get():
     headers = {"Content-Type": "application/json", "Session-Token": token_get()}
-    res = r.get("http://localhost:3000/users", headers=headers)
+    res = r.get("http://integration-server:3000/users", headers=headers)
     p=res.json()
     p=dict(p[1])
     uid=p['uid']
     return uid
 
 def token_get():
-    #res=r.get("http://integration-server:3000/service_connect")
+    res=r.get("http://integration-server:3000/service_connect")
     res="token"
     return res
  
 def point_get(uid):
     headers = {"Content-Type": "application/json", "session-token": token_get()}
     data = f'{{"uid": {uid}}}'
-    res=r.get("http://localhost:3000/location/latest", headers=headers, data=data)
-    return 
+    res=r.get("http://integration-servert:3000/location/latest", headers=headers, data=data)
+    if res.status_code != 200:
+        return "Error: Unable to fetch point data"
+    now_point_data = res.json()
+    now_point= now_point_data["coordinate"]
+    now_point = now_point.replace("POINT(", "").replace(")", "")
+    return now_point
 
 def month_points_get(uid):
     headers = {"Content-Type": "application/json", "session-token": token_get()}
     now_date = datetime.now()
     one_month_ago = now_date - timedelta(days=30)
     data = f'{{"uid": {uid}, "search_time": "{one_month_ago.strftime("%Y-%m-%d %H:%M:%S")}"}}'               
-    res = r.get("http://localhost:3000/location/month_points", headers=headers,data=data)
+    res = r.get("http://integration-server:3000/location/month_points", headers=headers,data=data)
     return res.json()
 
 def home_get(uid):
@@ -130,3 +135,4 @@ def point_to_tuple(wkt_str):
     if wkt_str.startswith("POINT(") and wkt_str.endswith(")"):
         wkt_str = wkt_str[6:-1]  # remove 'POINT(' and ')'
     return tuple(map(float, wkt_str.split()))
+
