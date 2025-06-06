@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
+import 'session.dart';
 /// 위치 추적 및 서버 전송 싱글톤 서비스
 class GpsTracker {
   static final GpsTracker _instance = GpsTracker._internal();
@@ -15,7 +15,6 @@ class GpsTracker {
   late String _ip;
   late String _port;
   late String _uid;
-  String _sessionToken = 'your_token_here'; // 필요시 setter로 변경
 
   // 위치 정보
   double? latitude;
@@ -27,11 +26,10 @@ class GpsTracker {
   Timer? _sendTimer;
 
   /// 서버 정보 및 uid 설정 (로그인 시 호출)
-  void configure({required String ip, required String port, required dynamic uid, String? sessionToken}) {
+  void configure({required String ip, required String port, required dynamic uid}) {
     _ip = ip;
     _port = port;
     _uid = uid.toString();
-    if (sessionToken != null) _sessionToken = sessionToken;
   }
 
   /// 위치 추적 시작 및 주기적 서버 전송
@@ -101,7 +99,7 @@ class GpsTracker {
         Uri.parse('http://$_ip:$_port/location/logs'),
         headers: {
           'content-type': 'application/json',
-          'session-token': _sessionToken,
+          'session-token': SessionManager().sessionToken ?? '',
         },
         body: body,
       );

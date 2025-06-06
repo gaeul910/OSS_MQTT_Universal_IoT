@@ -5,6 +5,7 @@ import 'package:pinput/pinput.dart';
 import 'lobby.dart';
 import 'notifications.dart';
 import 'gps.dart';
+import 'session.dart';
 // 로그인 페이지 위젯 (StatefulWidget으로 입력값 관리)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -61,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     // 서버로 uid와 인증코드 전송
-    final url = Uri.parse('http://$inputText:$portText/connects');
+    final url = Uri.parse('http://$inputText:$portText/connect');
     final headers = {'Content-Type': 'application/json'};
     final body = jsonEncode({
       'uid': userId,
@@ -71,13 +72,18 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final response = await http.post(url, headers: headers, body: body);
 
-      final Map<String, dynamic> resp = jsonDecode(response.body);
-      final sessionToken = resp['session-token'];
+      final sessionToken = response.body.trim();
 
-      if (response.statusCode == 200 && sessionToken != null && sessionToken.isNotEmpty) {
+      if (response.statusCode == 200 && sessionToken.isNotEmpty) {
         setState(() {
           _sessionToken = sessionToken;
         });
+        //세션 매니저에 세션 토큰과 서버 정보 등록 (자동 갱신 시작)
+        SessionManager().configure(
+          sessionToken: sessionToken,
+          ip: inputText,
+          port: portText,
+        );
 
         // NotificationService, GpsTracker 등에 서버 정보 및 세션 토큰 전달
         NotificationService().configure(
@@ -91,7 +97,6 @@ class _LoginPageState extends State<LoginPage> {
           ip: inputText,
           port: portText,
           uid: userId,
-          sessionToken: sessionToken,
         );
         GpsTracker().startTracking();
 
