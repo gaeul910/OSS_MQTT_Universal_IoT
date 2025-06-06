@@ -6,7 +6,7 @@ from collections import defaultdict
 import json
 import uuid
 import random
-import requests as r
+import set_of_request as r
 
 #처음 받은 데이터를 계산하기 쉽게 나누는 중
 def cluster_to_log_entries(cluster_store):
@@ -26,7 +26,7 @@ def cluster_to_log_entries(cluster_store):
 # -------------------- 유틸리티 함수 --------------------
 def parse_point(coordness):
     lon, lat = coordness.replace("POINT(", "").replace(")", "").split()
-    return float(lat), float(lon)
+    return float(lon), float(lat)
 
 def haversine_distance(lat1, lon1, lat2, lon2):
     R = 6371.0088  # Earth radius in km
@@ -70,7 +70,7 @@ def detect_initial_clusters(logs):
     cluster_store = {}
     for cid, days in cluster_visit_days.items():
         #초기 방문일수로 필터링
-        if len(days) >= 10:
+        if len(days) >= 1:
             cluster_points = logs[logs['cluster'] == cid][['lat', 'lon', 'uid']]
             
             representative_uid = cluster_points['uid'].iloc[0]
@@ -79,41 +79,53 @@ def detect_initial_clusters(logs):
             cluster_store[cid] = {
                 "lat": center['lat'],
                 "lon": center['lon'],
-                "visit_days": set(days),
+                "status": set(days),
                 "uid": representative_uid,
             }
 
     return cluster_store
 
 # -------------------- 클러스터 업데이트 --------------------
-def update_or_create_cluster(log, cluster_store):
+def update_or_create_cluster(log, cluster_store, logs_df, min_points=7, radius_m=30):
     lat, lon = log['lat'], log['lon']
     date = log['timestamp'].date().isoformat()
 
+    # 기존 클러스터에 속하는지 확인
     for cid, info in cluster_store.items():
         if is_same_cluster(lat, lon, info['lat'], info['lon']):
-            info['visit_days'].add(date)
-            return
+            info['status'].add(date)
+            return  # 기존 클러스터에 포함되었으므로 종료
 
-    if cluster_store:
-        new_cid = max(cluster_store.keys()) + 1
-    else:
-        new_cid = 0
+    same_day_logs = logs_df[logs_df['timestamp'].dt.date == log['timestamp'].date()]
+    nearby_count = 0
 
+    for _, row in same_day_logs.iterrows():
+        dist = haversine_distance(lat, lon, row['lat'], row['lon'])
+        if dist <= radius_m:
+            nearby_count += 1
+        if nearby_count >= min_points:
+            break
+
+    # 조건 미달이면 클러스터 생성하지 않음
+    if nearby_count < min_points:
+        return
+
+    # ---------------------------
+    # 새 클러스터 생성
+    # ---------------------------
+    new_cid = max(cluster_store.keys(), default=-1) + 1
     cluster_store[new_cid] = {
         "lat": lat,
         "lon": lon,
-        "visit_days": {date},
+        "status": {date},
         "uid": log['uid'],
     }
-
 # -------------------- 로그 전처리 --------------------
 def preprocess_logs(raw_logs):
     parsed_data = []
     for log in raw_logs:
-        lat, lon = parse_point(log['coordness'])
+        lat, lon = parse_point(log['coordinate'])
         parsed_data.append({
-            "id":log['id'],
             "timestamp": pd.to_datetime(log['time']),
             "lat": lat,
             "lon": lon,
@@ -128,53 +140,95 @@ def cluster_store_to_log_entries(cluster_store):
         lat = round(info['lat'], 6)
         lon = round(info['lon'], 6)
         log_entries.append({
-            "cluster_id": cid, 
             "coordness": f"POINT({lon:.6f} {lat:.6f})",
-            "stat": len(info.get('visit_days', [])),
+            "stat": len(info.get('status', [])),
             "uid": info.get("uid", str(uuid.uuid4())), 
         })
     return log_entries
 
-# -------------------- 테스트 --------------------
-def update():
-    data=[]
-    headers=[]
-    res =r.get("http://localhost:3000/location/logs", headers=headers, data=data)
-    #한달 데이터를 리스트 안에 넣어준다.##########
-    raw_logs = []
-    raw_logs=res.text
+def convert_favpoints_to_cluster_store(favpoints):
+    cluster_store = {}
+    for item in favpoints:
+        lat, lon = parse_point(item['coordinate'])
+        cluster_store[item['id']] = {
+            "lat": lat,
+            "lon": lon,
+            "status": set(),  # 방문일자 집합 초기화 (없으면 비어있는 상태)
+            "uid": item['uid']
+        }
+    return cluster_store
+
+
+def update(uid):
+    start_time = datetime(2025, 6, 6, 8, 0, 0)
+    interval = timedelta(minutes=3)
+
+# 회사와 집 위도(36.xxx), 경도(127.xxx)
+    company_lat, company_lon = 36.62896, 127.455923
+    home_lat, home_lon = 36.719073, 127.455923
+
+# 회사 -> 집 위도 변화량 (경도는 고정)
+    total_steps = 60  # 3분 간격 총 60번 이동 (3시간)
+
+    lat_step = (home_lat - company_lat) / total_steps
+
+    result = []
+
+# 회사 -> 집 경로
+    for i in range(total_steps + 1):
+        current_time = start_time + i * interval
+        lat = company_lat + lat_step * i
+        lon = company_lon  # 고정
+        coord = f"POINT({lon:.6f} {lat:.6f})"
+        result.append({
+            "time": current_time.isoformat(),
+            "coordinate": coord,
+            "uid": uid
+        })
+
+# 회사 근처 미세 움직임 30개 (약 90분, 3분 간격)
+    for i in range(30):
+        current_time = start_time + (total_steps + 1 + i) * interval
+        # 약간 랜덤하게 회사 근처 좌표 변경
+        lat = company_lat + (0.0001 * (i % 3) - 0.00005)
+        lon = company_lon + (0.0001 * (i % 2) - 0.00005)
+        coord = f"POINT({lon:.6f} {lat:.6f})"
+        result.append({
+            "time": current_time.isoformat(),
+            "coordinate": coord,
+            "uid": uid
+        })
+
+
+    raw_logs = result
     logs = preprocess_logs(raw_logs)
-    data=[]
-    headers=[]
-    #현욱이한테 이벤트 좌표들 모아놓은거 있나 확인하기#######따로 확인하기 다른 코드가 있나
-    res = r.get("http://localhost:3000/location/fav/point", headers=headers, data=data)
+
+    res = r.favorite_point_get(uid)
     # 1. 초기 클러스터 생성
-    if res.status_code==404:
+    if res==404:
         cluster_store = detect_initial_clusters(logs)
     else:
-        cluster_store=res.text
+        cluster_store = convert_favpoints_to_cluster_store(res)
 
     # 2. 실시간 로그 업데이트 실행 (마지막 날짜 기준)
     for _, row in logs.iterrows():
-        update_or_create_cluster(row, cluster_store)
+        update_or_create_cluster(row, cluster_store, logs_df=logs)
 
 
     cluster_store = {
         cid: info for cid, info in cluster_store.items()
         #방문일수로 필터링
-        if len(info['visit_days']) >= 10
+        if len(info['status']) >= 1
     }
+    print("필터링 이후 클러스터 개수:", len(cluster_store))
     # 결과 출력 내가 너한테 데이터를 줄때 클러스터 데이터랑// 회사 좌표를 줄꺼야
 
     for cid in cluster_store:
-        cluster_store[cid]["visit_days"] = set()  # 방문일수를 0으로 설정
+        cluster_store[cid]["status"] = set()  # 방문일수를 0으로 설정
 
-    
     output=cluster_store_to_log_entries(cluster_store)
-
     if not output:
         print("보낼 데이터가 존재하지 않음")
         return
-    
-    #현욱이한테 요청해서 보내기
-    return output
+    r.favorite_point_post(output)  # 클러스터 데이터를 서버에 전송
+    return 
