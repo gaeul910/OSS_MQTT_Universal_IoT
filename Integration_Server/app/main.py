@@ -338,12 +338,12 @@ def logs():
             # Permission Validation
             if check_permission(session_uid, get_permission) in [0, 1] and uid != session_uid:
                 return "Permission Denied", 403
-            location_id = dict_req["location_id"]
-            query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND id >= %s"
-            cursor.execute(query, (uid, location_id))
+            search_time = dict_req["search_time"]
+            query = "SELECT id, uid, ST_AsText(coordinate) as coordinate, time FROM locationlog WHERE uid = %s AND time >= %s"
+            cursor.execute(query, (uid, search_time))
             ret = cursor.fetchall()
             if not ret:
-                return "No data found for uid: {} after location_id: {}".format(uid, location_id), 404
+                return "No data found for uid: {} after location_id: {}".format(uid, search_time), 404
         except:
             return "Internal Server Error", 500
         return ret
