@@ -43,7 +43,7 @@ class UserTracker:
         print("실시간으로 데이터 받는중")
         while self.status == "in":
             self.user.route=""
-            time.sleep(0)
+            time.sleep(180)
 
             if should_update():
                 update_clusters(self.user.uid)
@@ -61,7 +61,7 @@ class UserTracker:
         print("밖에 있음 ...")
 
         while self.status == "out":
-            time.sleep(0.5)
+            time.sleep(180)
             self.user.get()
 
             if self.user.event == "특정 장소 도착":#if_send는 요청이 비어있을때만 보내는 함수이다
