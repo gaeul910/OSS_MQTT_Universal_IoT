@@ -47,4 +47,30 @@ class SessionManager {
       _renewTimer = Timer.periodic(const Duration(days: 1), (_) => _renewSession());
     });
   }
+  /// 세션 갱신 요청
+  Future<void> _renewSession() async {
+    if (_sessionToken == null || _ip == null || _port == null) return;
+
+    final url = Uri.parse('http://$_ip:$_port/renew_session');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'session-token': _sessionToken!},
+      );
+      if (response.statusCode == 200) {
+        // 새 세션 키가 plain text로 온다고 가정
+        final newToken = response.body.trim();
+        if (newToken.isNotEmpty) {
+          _sessionToken = newToken;
+          print('[SessionManager] 세션 키 갱신 성공: $newToken');
+        } else {
+          print('[SessionManager] 세션 키 갱신 실패: 응답이 비어 있음');
+        }
+      } else {
+        print('[SessionManager] 세션 키 갱신 실패: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('[SessionManager] 세션 키 갱신 오류: $e');
+    }
+  }
 }
