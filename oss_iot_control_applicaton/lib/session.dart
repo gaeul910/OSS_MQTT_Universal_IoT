@@ -4,9 +4,7 @@ import 'package:http/http.dart' as http;
 class SessionManager {
   // 싱글톤 패턴
   static final SessionManager _instance = SessionManager._internal();
-
   factory SessionManager() => _instance;
-
   SessionManager._internal();
 
   String? _sessionToken;
@@ -26,6 +24,7 @@ class SessionManager {
     _port = port;
     _setupRenewTimer();
   }
+
   /// 세션 키 반환 (앱 전체에서 사용)
   String? get sessionToken => _sessionToken;
 
@@ -47,6 +46,7 @@ class SessionManager {
       _renewTimer = Timer.periodic(const Duration(days: 1), (_) => _renewSession());
     });
   }
+
   /// 세션 갱신 요청
   Future<void> _renewSession() async {
     if (_sessionToken == null || _ip == null || _port == null) return;
@@ -72,5 +72,10 @@ class SessionManager {
     } catch (e) {
       print('[SessionManager] 세션 키 갱신 오류: $e');
     }
+  }
+
+  /// 앱 종료 등에서 타이머 해제
+  void dispose() {
+    _renewTimer?.cancel();
   }
 }
