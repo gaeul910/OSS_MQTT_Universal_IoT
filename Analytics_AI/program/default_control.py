@@ -27,26 +27,17 @@ class control:
         self.home_point=home_point.replace("POINT(","").replace(")","")
         #집의 좌표를 요청해서 받는다
 
-
-        """request=open("test.json","r")
-        #요청받는 값은 json형태이다
-        with request as f:
-            p=json.load(f)                
-            if isinstance(p,list):          
-                p=dict(p[0])
-   
-            now_point=p["coordness"]
-            self.now_point=now_point.replace("POINT(","").replace(")","")
-        #현재 좌표를 요청해서 이 변수에 받는다 만약 딕셔너리로 받는다고 가정을 한다면"""
-        
-        self.now_point=input("현재 좌표를 입력해주세용 : ")
+        self.now_point=RR.point_get(self.uid)
         if self.not_work_exit:
             self.route=RR.route_get(self.now_point,self.route)# 도착을 하면 get함수로 받는것이 아니라 work_exit.py에서 받음다만 출근길을 벗어났을때는 이걸 사용함 그때 해결법은?
         #현재 좌표를 입력받는다. 나중에 리퀘스트로 받아야함
 
         res=RR.favorite_point_get(self.uid)
+        if len(res)<=1:
+            print("즐겨찾기 포인트가 없습니다.")
+            return
         #요청받는 값은 json형태이다                
-        for p in res[0:1]:#나중에 바꿔야함 res[1:]으로
+        for p in res[1:]:
         #if문으로 나중에 오류코드나오면 좌표를 저장하지않는다 회사위치를 어떻게 받냐 get 실시간 location_id로 get_event( id )
             work_point=p["coordinate"]
             work_point=work_point.replace("POINT(","").replace(")","")
