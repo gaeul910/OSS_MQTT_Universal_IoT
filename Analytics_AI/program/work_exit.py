@@ -25,8 +25,7 @@ def exit(uid,event_id):
     i=0
 
     while (1):
-        #r.실시간으로 받아야함####
-        now_point=input("현재 좌표를 입력해주세용 : ")
+        now_point=RR.point_get(uid)
         data=now_point.split()
         now_point=[]
         now_point.append(float(data[0]))
@@ -60,6 +59,7 @@ def exit(uid,event_id):
             status=1
             MS.switch(status,uid)
         # 거의 도착했다고 판단하고 미리 켜놓기
+        time.sleep(180)
             
     #30초마다 좌표를 확인해준다.
 
