@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login.dart'; // 로그인 화면 import
 import 'notifications.dart';
-
+import 'gps.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -29,7 +29,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               });
             },
           ),
-          // 2. 로그아웃 항목
+          // gps 테스트
+          ListTile(
+            leading: const Icon(Icons.gps_fixed),
+            title: const Text('GPS 테스트'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GpsTestScreen()),
+              );
+            },
+          ),
+          // 3. 로그아웃 항목
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('로그아웃'),
@@ -55,6 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               );
               if (shouldLogout == true) {
                 NotificationService().stopPolling();
+                GpsTracker().stopTracking();
                 Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
