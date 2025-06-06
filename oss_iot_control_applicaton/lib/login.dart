@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:pinput/pinput.dart';
 import 'lobby.dart';
 import 'notifications.dart';
+import 'gps.dart';
 // 로그인 페이지 위젯 (StatefulWidget으로 입력값 관리)
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,15 +17,21 @@ class _LoginPageState extends State<LoginPage> {
   final String correctCode = '123456';
 
   final TextEditingController _textController = TextEditingController(); // ip 입력 컨트롤러
-  final TextEditingController _portController = TextEditingController();
+  final TextEditingController _portController = TextEditingController(); // 포트 입력 컨트롤러
+  final TextEditingController _uidController = TextEditingController();  // uid 입력 컨트롤러
 
   // 사용자가 입력한 인증코드 저장 변수
   String _enteredCode = '';
 
+  // 세션 토큰 저장 변수
+  String? _sessionToken;
+
   // 로그인 버튼 클릭 시 실행되는 함수
-  void _onLogin(BuildContext context, String code) {
+  Future<void> _onLogin(BuildContext context, String code) async {
     String inputText = _textController.text.trim(); // 문자열 입력값
     String portText = _portController.text.trim();
+    String uidText = _uidController.text.trim();
+
     // 주소 입력이 비었는지 체크
     if (inputText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,24 +45,69 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
-
-    // 인증코드가 일치하는지 체크
-    if (code == correctCode) {
-      const int userId = 123;
-      NotificationService().configure(
-        ip: inputText,
-        port: portText,
-        uid: userId,
-      );
-      NotificationService().startPolling();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LobbyScreen()),
-      );
-      // 로그인 성공 시 추가 작업 가능
-    } else {
+    if (uidText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('코드가 일치하지 않습니다.')),
+        const SnackBar(content: Text('uid를 입력해주세요.')),
+      );
+      return;
+    }
+    // uid는 숫자만 입력 가능
+    int? userId = int.tryParse(uidText);
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('uid는 숫자만 입력해야 합니다.')),
+      );
+      return;
+    }
+
+    // 서버로 uid와 인증코드 전송
+    final url = Uri.parse('http://$inputText:$portText/connects');
+    final headers = {'Content-Type': 'application/json'};
+    final body = jsonEncode({
+      'uid': userId,
+      'auth_code': code,
+    });
+
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+
+      final Map<String, dynamic> resp = jsonDecode(response.body);
+      final sessionToken = resp['session-token'];
+
+      if (response.statusCode == 200 && sessionToken != null && sessionToken.isNotEmpty) {
+        setState(() {
+          _sessionToken = sessionToken;
+        });
+
+        // NotificationService, GpsTracker 등에 서버 정보 및 세션 토큰 전달
+        NotificationService().configure(
+          ip: inputText,
+          port: portText,
+          uid: userId,
+        );
+        NotificationService().startPolling();
+
+        GpsTracker().configure(
+          ip: inputText,
+          port: portText,
+          uid: userId,
+          sessionToken: sessionToken,
+        );
+        GpsTracker().startTracking();
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LobbyScreen()),
+        );
+        // 로그인 성공 시 추가 작업 가능
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('로그인 실패 또는 세션 토큰 없음: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('서버 연결 실패: $e')),
       );
     }
   }
@@ -61,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ip주소 + port 번호 + 인증코드 입력')),
+      appBar: AppBar(title: const Text('통신정보 및 인증코드 입력')),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -77,13 +131,23 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 24), // 위젯 사이 간격
 
-
             // 포트 번호 입력 필드
             TextField(
               controller: _portController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
                 labelText: '포트 번호 입력',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // uid 입력 필드
+            TextField(
+              controller: _uidController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'uid 입력 (숫자)',
                 border: OutlineInputBorder(),
               ),
             ),
