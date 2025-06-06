@@ -23,7 +23,7 @@ def cluster_to_log_entries(cluster_store):
         })
     return log_entries
 
-# -------------------- 유틸리티 함수 --------------------
+# 유틸
 def parse_point(coordness):
     lon, lat = coordness.replace("POINT(", "").replace(")", "").split()
     return float(lon), float(lat)
@@ -40,7 +40,7 @@ def haversine_distance(lat1, lon1, lat2, lon2):
 def is_same_cluster(lat1, lon1, lat2, lon2, threshold=30):
     return haversine_distance(lat1, lon1, lat2, lon2) <= threshold
 
-# -------------------- 클러스터 초기화 (DBSCAN) --------------------
+# 클러스터 없으면 만들기
 def detect_initial_clusters(logs):
     logs = logs.copy()
     logs['timestamp'] = pd.to_datetime(logs['timestamp'])
@@ -70,7 +70,7 @@ def detect_initial_clusters(logs):
     cluster_store = {}
     for cid, days in cluster_visit_days.items():
         #초기 방문일수로 필터링
-        if len(days) >= 1:
+        if len(days) >= 10:
             cluster_points = logs[logs['cluster'] == cid][['lat', 'lon', 'uid']]
             
             representative_uid = cluster_points['uid'].iloc[0]
@@ -85,7 +85,7 @@ def detect_initial_clusters(logs):
 
     return cluster_store
 
-# -------------------- 클러스터 업데이트 --------------------
+# 업데이트!!!!
 def update_or_create_cluster(log, cluster_store, logs_df, min_points=7, radius_m=30):
     lat, lon = log['lat'], log['lon']
     date = log['timestamp'].date().isoformat()
@@ -110,9 +110,6 @@ def update_or_create_cluster(log, cluster_store, logs_df, min_points=7, radius_m
     if nearby_count < min_points:
         return
 
-    # ---------------------------
-    # 새 클러스터 생성
-    # ---------------------------
     new_cid = max(cluster_store.keys(), default=-1) + 1
     cluster_store[new_cid] = {
         "lat": lat,
@@ -120,7 +117,7 @@ def update_or_create_cluster(log, cluster_store, logs_df, min_points=7, radius_m
         "status": {date},
         "uid": log['uid'],
     }
-# -------------------- 로그 전처리 --------------------
+# 로그로 만들기
 def preprocess_logs(raw_logs):
     parsed_data = []
     for log in raw_logs:
@@ -160,52 +157,13 @@ def convert_favpoints_to_cluster_store(favpoints):
 
 
 def update(uid):
-    start_time = datetime(2025, 6, 6, 8, 0, 0)
-    interval = timedelta(minutes=3)
-
-# 회사와 집 위도(36.xxx), 경도(127.xxx)
-    company_lat, company_lon = 36.62896, 127.455923
-    home_lat, home_lon = 36.719073, 127.455923
-
-# 회사 -> 집 위도 변화량 (경도는 고정)
-    total_steps = 60  # 3분 간격 총 60번 이동 (3시간)
-
-    lat_step = (home_lat - company_lat) / total_steps
-
-    result = []
-
-# 회사 -> 집 경로
-    for i in range(total_steps + 1):
-        current_time = start_time + i * interval
-        lat = company_lat + lat_step * i
-        lon = company_lon  # 고정
-        coord = f"POINT({lon:.6f} {lat:.6f})"
-        result.append({
-            "time": current_time.isoformat(),
-            "coordinate": coord,
-            "uid": uid
-        })
-
-# 회사 근처 미세 움직임 30개 (약 90분, 3분 간격)
-    for i in range(30):
-        current_time = start_time + (total_steps + 1 + i) * interval
-        # 약간 랜덤하게 회사 근처 좌표 변경
-        lat = company_lat + (0.0001 * (i % 3) - 0.00005)
-        lon = company_lon + (0.0001 * (i % 2) - 0.00005)
-        coord = f"POINT({lon:.6f} {lat:.6f})"
-        result.append({
-            "time": current_time.isoformat(),
-            "coordinate": coord,
-            "uid": uid
-        })
-
-
-    raw_logs = result
+   
+    raw_logs = r.month_points_get(uid) 
     logs = preprocess_logs(raw_logs)
 
     res = r.favorite_point_get(uid)
     # 1. 초기 클러스터 생성
-    if res==404:
+    if len(res)<=1:
         cluster_store = detect_initial_clusters(logs)
     else:
         cluster_store = convert_favpoints_to_cluster_store(res)
@@ -218,7 +176,7 @@ def update(uid):
     cluster_store = {
         cid: info for cid, info in cluster_store.items()
         #방문일수로 필터링
-        if len(info['status']) >= 1
+        if len(info['status']) >= 10
     }
     print("필터링 이후 클러스터 개수:", len(cluster_store))
     # 결과 출력 내가 너한테 데이터를 줄때 클러스터 데이터랑// 회사 좌표를 줄꺼야
