@@ -159,8 +159,6 @@ def convert_favpoints_to_cluster_store(favpoints):
 def update(uid):
    
     raw_logs = r.month_points_get(uid) 
-    if raw_logs == "아직 어떤 기록도 없음":
-        return
     logs = preprocess_logs(raw_logs)
 
     res = r.favorite_point_get(uid)
