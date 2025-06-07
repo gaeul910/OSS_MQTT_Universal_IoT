@@ -38,6 +38,14 @@ except:
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 # Please Note that responses could change when DB is linked.
 
+properties.read("./mqtt.properties")
+MQTT_BROKER_HOST = properties["BROKER"]["host"]
+try:
+    mqtt_client = MQTTClient(MQTT_BROKER_HOST)
+    mqtt_client.connect()
+except Exception as e:
+    print("MQTT Client Failed to connect")
+
 
 def delete_expired_session():
     try:
