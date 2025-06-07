@@ -159,17 +159,22 @@ def root_auth():
             return "Root user does not Exist, register first!", 403
         return render_template("root_auth.html")
     elif request.method == 'POST':
+        root_exist = user_search(0)
+        if root_exist != 1:
+            return "Root user does not Exist, register first!", 403
         try:
-            root_exist = user_search(0)
-            if root_exist != 1:
-                return "Root user does not Exist, register first!", 403
-            
-            # auth root user
             req_root_password = request.form["password"]
+        except:
+            return "Request Error", 400
+        try:
+            # auth root user
             query = "SELECT * FROM rootuser"
             cursor.execute(query)
-            res = cursor.fetchall()
-            root_password = res[0]["password"]
+            res = cursor.fetchone()
+            root_password = res["password"]
+        except:
+            return "Internel server error", 500
+        try:
             if bcrypt.check_password_hash(root_password, req_root_password):
                 session_token = gen_session(0, 2)  # Generate session for root user (uid=0)
                 if session_token == -1:
@@ -252,7 +257,7 @@ def register():
         elif auth_stat == -1:
             return "Internal Server Error", 500 # Server Error
         # Registration Process
-        elif auth_stat == 0:
+        if auth_stat == 0:
             if request.method == 'GET':
                 return render_template("register.html")
 
@@ -272,10 +277,7 @@ def register():
                     cursor.execute(query, (uid, permission, ))
                     return f"Process Successful, new uid is {uid}", 200
                 except:
-                    return "Internel Server Error", 500
-            return f"Process Successful, new uid is {uid}"
-        else:
-            return "Unauthorized", 403
+                    return "Internal Server Error", 500
     else:
         if request.method == 'GET':
             return render_template("root_register.html")
@@ -324,7 +326,7 @@ def users():
         ret = cursor.fetchall()
     except:
         return "Internal Server Error", 500
-    return ret
+    return str(ret)
 
 @app.route("/protocol/mqtt/getstats", methods=['GET'])
 
@@ -414,7 +416,7 @@ def logs():
                 return "No data found for uid: {} after location_id: {}".format(uid, search_time), 404
         except:
             return "Internal Server Error", 500
-        return ret
+        return str(ret)
         
     elif(request.method == 'POST'):
         try:
@@ -459,7 +461,7 @@ def latest():
     cursor.execute(query, (uid, ))
     ret = cursor.fetchone()
 
-    return ret
+    return str(ret)
 
 @app.route("/location/fav/point", methods=['GET', 'POST', 'DELETE'])
 
@@ -491,7 +493,7 @@ def point():
         ret = cursor.fetchall()
         if not ret:
             return "No data found for uid: {}".format(uid)
-        return ret
+        return str(ret)
     
     # This middleware is usually used by services
     elif(request.method == 'POST'):
@@ -572,7 +574,7 @@ def route():
         ret = cursor.fetchall()
         if not ret:
             return "No data found for startlocation_id: {}".format(startlocation_id), 404
-        return ret
+        return str(ret)
     
     elif(request.method == 'POST'):
         try:
@@ -651,7 +653,7 @@ def visits():
         ret = cursor.fetchone()
     except:
         return "Internal Server Error", 500
-    return ret
+    return str(ret)
 
 @app.route("/event/eventlogs", methods=['GET', 'POST', 'DELETE'])
 
@@ -681,7 +683,7 @@ def eventlogs():
         ret = cursor.fetchall()
         if not ret:
             return "No data found for event_id: {}".format(event_id), 404
-        return ret
+        return str(ret)
     
     elif(request.method == 'POST'):
         # request process
@@ -769,7 +771,7 @@ def getnoti():
             return "No notification found for {}".format(notification_id), 404
     except:
         return f"Error: {ret}", 500
-    return ret
+    return str(ret)
     
 @app.route("/notification/postnoti", methods=['POST'])
 
@@ -795,12 +797,7 @@ def postnoti():
     about = dict_req["about"]
     uid = int(uid)
     query = "INSERT INTO usernotifications VALUES (%s, %s, %s, %s, %s, %s)"
-    cursor.execute("SELECT MAX(id) AS highest_id FROM usernotifications")
-    getdict = cursor.fetchone()
-    notification_id = getdict['highest_id']
-    if not notification_id:
-        notification_id = 0
-    notification_id += 1
+    notification_id = gen_id("usernotifications", "id")
 
     try:
         cursor.execute(query, (notification_id, uid, content, issue, 0, about))
@@ -834,7 +831,7 @@ def sync():
                 return "No data to sync", 404
         except:
             return f"Error: {ret}", 500
-        return ret
+        return str(ret)
 
     # POST
     elif request.method == 'POST':
