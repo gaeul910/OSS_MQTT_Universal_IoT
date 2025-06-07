@@ -4,6 +4,7 @@ import 'dart:isolate';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'session.dart';
 
 class NotificationService {
   // 싱글톤 패턴
@@ -72,7 +73,8 @@ class NotificationService {
         'sendPort': _receivePort!.sendPort,
         'ip': _ip,
         'port': _port,
-        'uid': _uid, // 추가!
+        'uid': _uid,
+        'sessionToken': SessionManager().sessionToken ?? '',
       },
     );
 
@@ -104,7 +106,9 @@ class NotificationService {
     final String content = notification['content']?.toString() ?? '새로운 알림이 있습니다.';
 
     await _showNotification(id, 'IoT 알림', content);
-    //await _updateNotificationStatus(id); //나중에 추가할 것
+
+    await _updateNotificationStatus(id);
+
 
     debugPrint('알림 수신 및 상태 업데이트: ID=$id, 내용=$content');
   }
@@ -138,18 +142,17 @@ class NotificationService {
     );
   }
 
-/* 알림 상태 업데이트 (stat = 1로 설정)
+  //이미 받은 알림의 stat 값을 1로 초기화 하는 기능
   Future<bool> _updateNotificationStatus(int notificationId) async {
     try {
       final response = await http.post(
-        Uri.parse('http://$_ip:$_port/notification/getnoti'),
+        Uri.parse('http://$_ip:$_port/notification/sync'),
         headers: {
-          'Content-Type': 'application/json',
-          'uid': _uid,
+          'content-type': 'application/json',
+          'session-token': SessionManager().sessionToken ?? '',
         },
         body: json.encode({
-          'id': notificationId,
-          'stat': 1,
+          'notification_id': notificationId,
         }),
       );
       return response.statusCode == 200;
@@ -157,10 +160,11 @@ class NotificationService {
       debugPrint('알림 상태 업데이트 실패: $e');
       return false;
     }
-  } */
+  }
 
   /// 롱 폴링 작업 (Isolate에서 실행)
   static Future<void> _pollingTask(Map<String, dynamic> params) async {
+    final String sessionToken = params['sessionToken'] ?? '';
     final SendPort sendPort = params['sendPort'];
     final String ip = params['ip'];
     final String port = params['port'];
@@ -172,6 +176,8 @@ class NotificationService {
           Uri.parse('http://$ip:$port/notification/sync'),
           headers: {
             'uid': uid,
+            'content-type': 'application/json',
+            'session-token': sessionToken,
           },
         ).timeout(const Duration(seconds: 40));
 
@@ -185,6 +191,7 @@ class NotificationService {
                 Uri.parse('http://$ip:$port/notification/getnoti'),
                 headers: {
                   'id': idValue.toString(),
+                  'session-token': sessionToken,
                 },
               );
               if (notiResponse.statusCode == 200) {
