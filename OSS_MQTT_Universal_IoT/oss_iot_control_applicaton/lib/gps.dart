@@ -11,6 +11,18 @@ class GpsTracker {
   factory GpsTracker() => _instance;
   GpsTracker._internal();
 
+  bool get isTracking => _isTracking;
+  set isTracking(bool value) => _isTracking = value;
+
+  StreamSubscription<Position>? get positionStream => _positionStream;
+  set positionStream(StreamSubscription<Position>? value) => _positionStream = value;
+
+  Timer? get sendTimer => _sendTimer;
+  set sendTimer(Timer? value) => _sendTimer = value;
+
+  @visibleForTesting
+  Future<void> sendLocationToServerForTest() => _sendLocationToServer();
+
   // 서버 정보 및 사용자 정보
   late String _ip;
   late String _port;

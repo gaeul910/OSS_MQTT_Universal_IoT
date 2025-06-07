@@ -1,4 +1,3 @@
-// lib/main.dart
 import 'package:flutter/material.dart';
 import 'login.dart'; // LoginPage가 정의된 파일 import
 import 'config.dart';

@@ -92,7 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 NotificationService().stopPolling();
                 GpsTracker().stopTracking();
                 Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
                       (route) => false,
                 );
               }

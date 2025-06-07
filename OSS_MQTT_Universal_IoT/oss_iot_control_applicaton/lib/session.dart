@@ -13,6 +13,8 @@ class SessionManager {
 
   Timer? _renewTimer;
 
+  Timer? get renewTimer => _renewTimer;
+  Future<void> renewSession() => _renewSession();
   /// 세션 키, 서버 정보 저장
   void configure({
     required String sessionToken,
