@@ -1,4 +1,6 @@
 from flask import Flask, render_template, request
+from mqtt_module import MQTTClient
+import mqtt_module
 import configparser
 import pymysql
 import sys
