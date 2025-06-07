@@ -1,0 +1,6 @@
+PyMySQL >= 1.1.1
+Flask >= 3.1.1
+cryptography >= 45.0.3
+bcrypt >= 4.3.0
+flask-bcrypt >= 1.0.1
+paho_mqtt >= 2.1.0
