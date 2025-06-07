@@ -345,6 +345,39 @@ def getstats():
     except Exception as e:
         app.logger.error(f"Error in getstats: {str(e)}")
         return f"Error: {str(e)}", 500
+        
+@app.route("/protocol/mqtt/command", methods=['POST'])
+
+def command():
+    # auth feature
+    try:
+        auth_stat = auth_user(request.headers["Session-Token"])
+    except:
+        return "Session not found", 403
+    if auth_stat == -1:
+        return "Authentication Server Error", 500
+    elif auth_stat == -2:
+        return "Invalid Session", 403
+    session_uid = auth_stat
+    
+    req_dict = request.get_json()
+    topic = req_dict["topic"]
+    device_id = req_dict["device_id"]
+    command = req_dict["command"]
+
+    try:
+        ret = mqtt_module.operate(mqtt_client, device_id, command, topic)
+    except Exception as e:
+        print(f"Error in getstats: {ret}")
+        return f"Internal Server Error {ret}", 500
+    if type(ret) == str:
+        return f"Error in process: {ret}"
+
+    if ret == 0:
+        return "Operation Success", 200
+    
+    return "Internal Server Error", 500
+
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
