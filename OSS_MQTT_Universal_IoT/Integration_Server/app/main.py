@@ -373,10 +373,10 @@ def command():
     try:
         ret = mqtt_module.operate(mqtt_client, device_id, command, topic)
     except Exception as e:
-        print(f"Error in getstats: {ret}")
-        return f"Internal Server Error {ret}", 500
+        print(f"Error in getstats")
+        return f"Internal Server Error", 500
     if type(ret) == str:
-        return f"Error in process: {ret}"
+        return f"Error in process"
 
     if ret == 0:
         return "Operation Success", 200
