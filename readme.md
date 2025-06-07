@@ -55,9 +55,31 @@ tzdata==2025.2
 urllib3==2.4.0
 
 # Application Dependencies
+dependencies:
+flutter:
+sdk: flutter
+geolocator: ^14.0.0
+permission_handler: ^11.3.1
+flutter_local_notifications: 19.2.1
+cupertino_icons: ^1.0.8
+verification_code_field: ^1.0.8
+pinput: ^5.0.1
+intl: ^0.18.0
 
+dev_dependencies:
+flutter_test:
+sdk: flutter
+mockito: ^5.0.0
 # How to use
-
+1. 어플리케이션 실행 시 위치 및 알림 권한 제공에 관한 권한을 요청합니다. 이를 모두 수락하면 로그인 페이지가 나옵니다.
+2. 로그인 페이지에서는 ip, port번호, uid, 인증코드를 입력해야 합니다. 
+3. 접속하고자 하는 서버의 ip와 port번호를 입력한 후, 서버 주소의 /connect로 접근해 나온 인증코드를 입력합니다. uid는 본인이 원하는 값을 입력합니다.
+4. 올바른 인증코드를 입력했다면 로비 화면으로 넘어갑니다. 오른쪽 위의 햄버거 버튼을 통해 설정 기능에 들어갈 수 있습니다.
+5. 설정 기능에는 다크모드, gps테스트, 본인의 세션 키 확인, 로그아웃이 존재합니다.
+6. 다크모드는 on/off 형태로 끄고 켤 수 있으며, 활성화시 앱의 전체적인 테마가 어둡게 변합니다.
+7. gps 테스트 기능은 gps 위치 추적을 끌 수 있으며, 현재 본인의 좌표를 위도와 경도로 확인할 수 있습니다.
+8. 본인의 세션 키 확인 버튼을 눌러 현재 본인의 세션키를 확인할 수 있습니다. 매 자정 어플리케이션에서 자동으로 서버에서 새 세션 키를 받아옵니다.
+9. 로그아웃 버튼을 눌러 2번의 과정으로 돌아갈 수 있습니다.
 ## Onboarding
 
 1.  Please Install the server software at the 24/7 running server.
