@@ -20,6 +20,9 @@ class control:
     def get (self):
         self.level=0
         p=RR.home_get(self.uid)
+        if p==404:
+            print("집 좌표가 없습니다. 집 좌표를 설정해주세요.")
+            return
         #요청받는 값은 json형태이다              
         if isinstance(p,list):          
              p=dict(p[0])

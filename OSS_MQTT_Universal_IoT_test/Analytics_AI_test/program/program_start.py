@@ -43,7 +43,9 @@ class UserTracker:
         print("실시간으로 데이터 받는중")
         while self.status == "in":
             self.user.route=""
-          
+            if self.user.uid == "아직 유저가 없음":
+                self.user.uid = RR.uid_get()
+                continue
 
             if should_update():
                 update_clusters(self.user.uid)
@@ -51,6 +53,7 @@ class UserTracker:
                 print("아직 30일이 안됐음")
 
             self.user.get()
+            
             if self.user.home_out() == '집을 나감':
                 self.status = "out"
                 print("집을 나감")
