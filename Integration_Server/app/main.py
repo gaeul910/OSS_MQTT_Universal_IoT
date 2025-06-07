@@ -337,6 +337,14 @@ def getstats():
         return "Invalid Session", 403
     session_uid = auth_stat
 
+    try:
+        # 약간의 대기 필요 (MQTT 연결이 비동기이므로)
+        time.sleep(1)
+        stats = mqtt_module.get_stats_from_clients(mqtt_client)
+        return {"stats": stats}
+    except Exception as e:
+        app.logger.error(f"Error in getstats: {str(e)}")
+        return f"Error: {str(e)}", 500
 @app.route("/location/logs", methods=['GET', 'POST', 'DELETE'])
 
 def logs():
